@@ -1,0 +1,61 @@
+http://www.ibm.com/developerworks/library/l-fuse/
+
+raw block device
+
+a raw device is a special kind of block device file that allows accessing a storage device such as a hard drive directly,
+ bypassing the operating system's caches and buffers
+
+
+https://github.com/libfuse/libfuse
+
+http://engineering.facile.it/write-filesystem-fuse
+
+
+
+file/directories
+
+write/write/rename/delete
+move directories
+
+
+
+
+
+
+data stucture
+
+http://libfuse.github.io/doxygen/annotated.html
+
+
+
+
+
+https://www.cs.cmu.edu/~fp/courses/15213-s07/lectures/15-filesys/
+
+
+unlink
+http://www.thegeekstuff.com/2012/06/c-temporary-files/
+
+
+Directory
+http://www.thegeekstuff.com/2012/06/c-directory/
+
+filesystem library
+http://en.cppreference.com/w/cpp/experimental/fs
+
+move file to a directory
+https://help.scilab.org/docs/5.5.2/en_US/movefile.html
+
+
+move directories to another
+http://stackoverflow.com/questions/22856040/how-to-move-the-files-from-one-directory-to-another-in-c
+http://stackoverflow.com/questions/20161243/how-to-move-file-from-one-folder-to-different-folder-in-linux
+
+
+How to: Copy, Delete, and Move Files and Folders
+example en C#
+https://msdn.microsoft.com/en-us/library/cc148994%28v=vs.100%29.aspx
+
+
+subdirectories
+http://stackoverflow.com/questions/2336242/recursive-mkdir-system-call-on-unix
