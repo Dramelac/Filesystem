@@ -23,23 +23,18 @@ static void supFS_fullpath(char fullPath[PATH_MAX],const char *path){
 
 }
 
-static int getattr_callback(const char *path, struct stat *stbuf) {
-    memset(stbuf, 0, sizeof(struct stat));
+static int supFS_getattr(const char *path, struct stat *statbuffer) {
+    int returnValue;
+    char fullPath[PATH_MAX];
 
-    if (strcmp(path, "/") == 0) {
-        stbuf->st_mode = S_IFDIR | 0755;
-        stbuf->st_nlink = 2;
-        return 0;
+    supFS_fullpath(fullPath, path);
+
+    returnValue = lstat(fullPath, statbuffer);
+    if (returnValue < 0){
+        return log_error("getAttr");
     }
 
-    if (strcmp(path, filepath) == 0) {
-        stbuf->st_mode = S_IFREG | 0777;
-        stbuf->st_nlink = 1;
-        stbuf->st_size = strlen(filecontent);
-        return 0;
-    }
-
-    return -ENOENT;
+    return returnValue;
 }
 
 static int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
@@ -94,7 +89,7 @@ static int supFS_read(const char *path, char *buf, size_t size, off_t offset,
 }
 
 static struct fuse_operations fuseStruct_callback = {
-        .getattr = getattr_callback,
+        .getattr = supFS_getattr,
         .open = supFS_open,
         .read = supFS_read,
         .readdir = supFS_readdir,
