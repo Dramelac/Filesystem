@@ -38,18 +38,18 @@ static int supFS_getattr(const char *path, struct stat *statbuffer) {
 }
 
 static int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-                         off_t offset, struct fuse_file_info *fileInfo) {
+                         off_t offset, struct fuse_file_info *fi) {
 
     int returnValue = 0;
     DIR *direntFileHandle;
     struct dirent *structdirent;
 
 
-    direntFileHandle = (DIR *) (uintptr_t) fileInfo->fh;
+    direntFileHandle = (DIR *) (uintptr_t) fi->fh;
 
     structdirent = readdir(direntFileHandle);
 
-    if (structdirent <= 0) {
+    if (structdirent == 0) {
         returnValue = log_error("supFS_readdir");
         return returnValue;
     }
@@ -102,6 +102,37 @@ static struct fuse_operations fuseStruct_callback = {
 
 int main(int argc, char *argv[])
 {
+    if ((getuid() == 0) || (geteuid() == 0)) {
+        printf("Root privilege forbidden, security fault.\n");
+        return 1;
+    }
 
-    return fuse_main(argc, argv, &fuseStruct_callback, NULL);
+
+    int fuse_return;
+    struct supFS_state *supfs_data;
+
+    if ((argc < 3) || (argv[argc-2][0] == '-') || (argv[argc-1][0] == '-')) {
+        // check arg count + last two arg not options but real directory
+        printf("USAGE : command [options] mountDirectory rootDirectory");
+    }
+
+    supfs_data = malloc(sizeof(struct supFS_state));
+    if (supfs_data == NULL) {
+        printf("error mallox data");
+        return -1;
+    }
+
+    supfs_data->rootDir = realpath(argv[argc-1], NULL);
+    // remove rootDir
+    argv[argc-1] = NULL;
+    argc--;
+
+    // run fuce
+    fuse_return = fuse_main(argc, argv, &fuseStruct_callback, supfs_data);
+
+    // print return value
+    printf("fuse return %d\n", fuse_return);
+
+    free(supfs_data);
+    return fuse_return;
 }
