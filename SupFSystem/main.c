@@ -50,17 +50,17 @@ static int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     return 0;
 }
 
-static int supFS_open(const char *path, struct fuse_file_info *fi) {
+static int supFS_open(const char *path, struct fuse_file_info *fileInfo) {
 
     int returnV = 0;
-    int fd;
+    int fileOpenRValue;
 
     char fullPath[PATH_MAX];
 
     supFS_fullpath(fullPath,path);
-    fd = open(fullPath,fi->flags);
-    if(fd<0){
-        returnV = log_error("supFS_open open");
+    fileOpenRValue = open(fullPath,fileInfo->flags);
+    if(fileOpenRValue<0){
+        returnV = log_error("supFS_open");
     }
 
 
