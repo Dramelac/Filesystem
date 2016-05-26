@@ -124,19 +124,20 @@ int supFS_opendir(const char *path, struct fuse_file_info *fi)
 
     return returnV;
 }
-/*static int supFS_setattr(const char *path, const char *name, const char *value, size_t size, int flags) {
 
-    int returnV = 0;
+int supFS_truncate(const char *path, off_t newsize)
+{
     char fullPath[PATH_MAX];
 
-
-    returnV = //lsetxattr(fullPath, name, value, size, flags);
-    if(returnV < 0){
-        returnV = log_error("supFS_write");
+    supFS_fullpath(fullPath, path);
+    int returnV = truncate(fullPath, newsize);
+    if (returnV < 0){
+        returnV = -errno;
     }
 
     return returnV;
-}*/
+}
+
 static int supFS_write(const char *path, const char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi) {
 
@@ -190,6 +191,26 @@ int supFS_mknod(const char *path, mode_t mode, dev_t dev)
 
     return returnV;
 }
+
+int supFS_chmod(const char *path, mode_t mode)
+{
+    char fpath[PATH_MAX];
+
+    supFS_fullpath(fpath, path);
+
+    return chmod(fpath, mode);
+}
+
+int supFS_chown(const char *path, uid_t uid, gid_t gid)
+
+{
+    char fpath[PATH_MAX];
+
+    supFS_fullpath(fpath, path);
+
+    return chown(fpath, uid, gid);
+}
+
 int supFS_mkdir(const char *path, mode_t mode){
     char fullPath[PATH_MAX];
     supFS_fullpath(fullPath,path);
@@ -207,6 +228,9 @@ static struct fuse_operations fuseStruct_callback = {
         .rename = supFS_rename,
         .mknod = supFS_mknod,
         .mkdir = supFS_mkdir,
+        .truncate = supFS_truncate,
+        .chmod = supFS_chmod,
+        .chown = supFS_chown,
 };
 
 int main(int argc, char *argv[])
