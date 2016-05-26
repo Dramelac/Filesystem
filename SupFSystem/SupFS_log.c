@@ -6,6 +6,6 @@
 
 int log_error(char *name){
     int returnValue = -errno;
-    printf("Error %s",name);
+    printf("Error %s, ",name);
     return returnValue;
 }

@@ -125,6 +125,23 @@ int supFS_opendir(const char *path, struct fuse_file_info *fi)
     return returnV;
 }
 
+int supFS_rename(const char *path, const char *newpath)
+{
+    char fullPath[PATH_MAX];
+    char fullnewpath[PATH_MAX];
+    int returnV = 0;
+
+    supFS_fullpath(fullPath, path);
+    supFS_fullpath(fullnewpath, newpath);
+
+    returnV = rename(fullPath, fullnewpath);
+    if (returnV < 0){
+        returnV = log_error("rename");
+    }
+
+    return returnV;
+}
+
 static struct fuse_operations fuseStruct_callback = {
         .getattr = supFS_getattr,
         .open = supFS_open,
@@ -132,6 +149,7 @@ static struct fuse_operations fuseStruct_callback = {
         .readdir = supFS_readdir,
         .opendir = supFS_opendir,
         .access = supFS_access,
+        .rename = supFS_rename,
 };
 
 int main(int argc, char *argv[])
