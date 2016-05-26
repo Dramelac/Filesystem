@@ -68,24 +68,16 @@ static int supFS_open(const char *path, struct fuse_file_info *fileInfo) {
 }
 
 static int supFS_read(const char *path, char *buf, size_t size, off_t offset,
-                      struct fuse_file_info *fi) {
+                      struct fuse_file_info *fileInfo) {
 
-    if (strcmp(path, filepath) == 0) {
-        size_t len = strlen(filecontent);
-        if (offset >= len) {
-            return 0;
-        }
+    int returnV = 0;
 
-        if (offset + size > len) {
-            memcpy(buf, filecontent + offset, len - offset);
-            return len - offset;
-        }
-
-        memcpy(buf, filecontent + offset, size);
-        return size;
+    returnV = pread(fileInfo->fh, buf, size, offset);
+    if(returnV<0){
+        returnV = log_error("supFS_read");
     }
 
-    return -ENOENT;
+    return returnV;
 }
 
 static struct fuse_operations fuseStruct_callback = {
