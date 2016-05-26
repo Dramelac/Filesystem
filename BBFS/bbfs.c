@@ -30,7 +30,7 @@
 #include <fcntl.h>
 #include <fuse.h>
 #include <libgen.h>
-#include <limits.h>
+#include <linux/limits.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
