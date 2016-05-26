@@ -38,16 +38,29 @@ static int supFS_getattr(const char *path, struct stat *statbuffer) {
 }
 
 static int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-                         off_t offset, struct fuse_file_info *fi) {
-    (void) offset;
-    (void) fi;
+                         off_t offset, struct fuse_file_info *fileInfo) {
 
-    filler(buf, ".", NULL, 0);
-    filler(buf, "..", NULL, 0);
+    int returnValue = 0;
+    DIR *direntFileHandle;
+    struct dirent *structdirent;
 
-    filler(buf, filename, NULL, 0);
 
-    return 0;
+    direntFileHandle = (DIR *) (uintptr_t) fileInfo->fh;
+
+    structdirent = readdir(direntFileHandle);
+
+    if (structdirent <= 0) {
+        returnValue = log_error("supFS_readdir");
+        return returnValue;
+    }
+
+    do {
+        if (filler(buf, structdirent->d_name, NULL, 0) != 0) {
+            return -ENOMEM;
+        }
+    } while ((structdirent = readdir(direntFileHandle)) != NULL);
+
+    return returnValue;
 }
 
 static int supFS_open(const char *path, struct fuse_file_info *fileInfo) {
