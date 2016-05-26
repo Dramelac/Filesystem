@@ -31,7 +31,7 @@ static int supFS_getattr(const char *path, struct stat *statbuffer) {
 
     returnValue = lstat(fullPath, statbuffer);
     if (returnValue < 0){
-        return log_error("getAttr");
+        returnValue = log_error("getAttr");
     }
 
     return returnValue;
