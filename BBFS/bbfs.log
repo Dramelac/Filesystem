@@ -11,17 +11,17 @@ bb_init()
     max_background = 0
     congestion_threshold = 0
     context:
-    fuse = 024e7510
+    fuse = 01d25530
     uid = 0
     gid = 0
     pid = 0
-    private_data = 024e6010
-    logfile = 024e7040
-    rootdir = /tmp/rootDir
+    private_data = 01d24010
+    logfile = 01d25040
+    rootdir = /home/romain/TestFS/rootDir
     umask = 00000
 
-bb_getattr(path="/.Trash", statbuf=0x5b7836f0)
-    bb_fullpath:  rootdir = "/tmp/rootDir", path = "/.Trash", fpath = "/tmp/rootDir/.Trash"
+bb_getattr(path="/.Trash", statbuf=0xa9ed65c0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/.Trash", fpath = "/home/romain/TestFS/rootDir/.Trash"
     lstat returned -1
     ERROR lstat: No such file or directory
     si:
@@ -39,8 +39,20 @@ bb_getattr(path="/.Trash", statbuf=0x5b7836f0)
     st_mtime = 0x00000000
     st_ctime = 0x00000000
 
-bb_getattr(path="/.Trash-1000", statbuf=0x5b7836f0)
-    bb_fullpath:  rootdir = "/tmp/rootDir", path = "/.Trash-1000", fpath = "/tmp/rootDir/.Trash-1000"
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_getattr(path="/.xdg-volume-info", statbuf=0xa9ed65c0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/.xdg-volume-info", fpath = "/home/romain/TestFS/rootDir/.xdg-volume-info"
     lstat returned -1
     ERROR lstat: No such file or directory
     si:
@@ -58,12 +70,867 @@ bb_getattr(path="/.Trash-1000", statbuf=0x5b7836f0)
     st_mtime = 0x00000000
     st_ctime = 0x00000000
 
-bb_getattr(path="/", statbuf=0x5b7836c0)
-    bb_fullpath:  rootdir = "/tmp/rootDir", path = "/", fpath = "/tmp/rootDir/"
+bb_getattr(path="/autorun.inf", statbuf=0xa9ed65c0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/autorun.inf", fpath = "/home/romain/TestFS/rootDir/autorun.inf"
+    lstat returned -1
+    ERROR lstat: No such file or directory
+    si:
+    st_dev = 0
+    st_ino = 0
+    st_mode = 00
+    st_nlink = 0
+    st_uid = 0
+    st_gid = 0
+    st_rdev = 0
+    st_size = 0
+    st_blksize = 0
+    st_blocks = 0
+    st_atime = 0x00000000
+    st_mtime = 0x00000000
+    st_ctime = 0x00000000
+
+bb_getattr(path="/.Trash-1000", statbuf=0xa9ed65c0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/.Trash-1000", fpath = "/home/romain/TestFS/rootDir/.Trash-1000"
+    lstat returned -1
+    ERROR lstat: No such file or directory
+    si:
+    st_dev = 0
+    st_ino = 0
+    st_mode = 00
+    st_nlink = 0
+    st_uid = 0
+    st_gid = 0
+    st_rdev = 0
+    st_size = 0
+    st_blksize = 0
+    st_blocks = 0
+    st_atime = 0x00000000
+    st_mtime = 0x00000000
+    st_ctime = 0x00000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_getattr(path="/machin.txt", statbuf=0xa9ed65c0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/machin.txt", fpath = "/home/romain/TestFS/rootDir/machin.txt"
     lstat returned 0
     si:
-    st_dev = 2056
-    st_ino = 1310867
+    st_dev = 2050
+    st_ino = 4855198
+    st_mode = 0100664
+    st_nlink = 1
+    st_uid = 1000
+    st_gid = 1000
+    st_rdev = 0
+    st_size = 0
+    st_blksize = 4096
+    st_blocks = 0
+    st_atime = 0x57477f4d
+    st_mtime = 0x5747760e
+    st_ctime = 0x5747760e
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_getattr(path="/autorun.inf", statbuf=0xa9ed65c0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/autorun.inf", fpath = "/home/romain/TestFS/rootDir/autorun.inf"
+    lstat returned -1
+    ERROR lstat: No such file or directory
+    si:
+    st_dev = 0
+    st_ino = 0
+    st_mode = 00
+    st_nlink = 0
+    st_uid = 0
+    st_gid = 0
+    st_rdev = 0
+    st_size = 0
+    st_blksize = 0
+    st_blocks = 0
+    st_atime = 0x00000000
+    st_mtime = 0x00000000
+    st_ctime = 0x00000000
+
+bb_getattr(path="/", statbuf=0xa9ed6590)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    lstat returned 0
+    si:
+    st_dev = 2050
+    st_ino = 4855197
     st_mode = 040775
     st_nlink = 2
     st_uid = 1000
@@ -72,62 +939,429 @@ bb_getattr(path="/", statbuf=0x5b7836c0)
     st_size = 4096
     st_blksize = 4096
     st_blocks = 8
-    st_atime = 0x574744e5
-    st_mtime = 0x574744e4
-    st_ctime = 0x574744e4
+    st_atime = 0x57478054
+    st_mtime = 0x57477f6b
+    st_ctime = 0x57477f6b
 
-bb_opendir(path="/", fi=0x5b783720)
-    bb_fullpath:  rootdir = "/tmp/rootDir", path = "/", fpath = "/tmp/rootDir/"
-    opendir returned 0x0x2507d00
+bb_access(path="/", mask=01)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
     fi:
     flags = 0x00018800
     fh_old = 0x00000000
     writepage = 0
     direct_io = 0
     keep_cache = 0
-    fh = 0x0000000002507d00
+    fh = 0x0000000001d45d20
     lock_owner = 0x0000000000000000
 
-bb_readdir(path="/", buf=0x024e7430, filler=0xf4942220, offset=0, fi=0x5b783720)
-    readdir returned 0x0x2507d30
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
 calling filler with name .
 calling filler with name ..
-calling filler with name second.lol
     fi:
     flags = 0x00000000
-    fh_old = 0x02507d00
+    fh_old = 0x01d45d20
     writepage = 0
     direct_io = 0
     keep_cache = 0
-    fh = 0x0000000002507d00
+    fh = 0x0000000001d45d20
     lock_owner = 0x0000000000000000
 
-bb_getattr(path="/second.lol", statbuf=0x5b7836f0)
-    bb_fullpath:  rootdir = "/tmp/rootDir", path = "/second.lol", fpath = "/tmp/rootDir/second.lol"
+bb_getattr(path="/machin.txt", statbuf=0xa9ed65c0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/machin.txt", fpath = "/home/romain/TestFS/rootDir/machin.txt"
     lstat returned 0
     si:
-    st_dev = 2056
-    st_ino = 1310864
+    st_dev = 2050
+    st_ino = 4855198
     st_mode = 0100664
     st_nlink = 1
     st_uid = 1000
     st_gid = 1000
     st_rdev = 0
-    st_size = 9
+    st_size = 0
     st_blksize = 4096
-    st_blocks = 8
-    st_atime = 0x57474459
-    st_mtime = 0x57474454
-    st_ctime = 0x57474501
+    st_blocks = 0
+    st_atime = 0x57477f4d
+    st_mtime = 0x5747760e
+    st_ctime = 0x5747760e
 
-bb_releasedir(path="/", fi=0x5b783730)
+bb_releasedir(path="/", fi=0xa9ed6600)
     fi:
     flags = 0x00000000
-    fh_old = 0x02507d00
+    fh_old = 0x01d45d20
     writepage = 0
     direct_io = 0
     keep_cache = 0
-    fh = 0x0000000002507d00
+    fh = 0x0000000001d45d20
     lock_owner = 0x0000000000000000
 
-bb_destroy(userdata=0x024e6010)
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_getattr(path="/machin.txt", statbuf=0xa9ed65c0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/machin.txt", fpath = "/home/romain/TestFS/rootDir/machin.txt"
+    lstat returned 0
+    si:
+    st_dev = 2050
+    st_ino = 4855198
+    st_mode = 0100664
+    st_nlink = 1
+    st_uid = 1000
+    st_gid = 1000
+    st_rdev = 0
+    st_size = 0
+    st_blksize = 4096
+    st_blocks = 0
+    st_atime = 0x57477f4d
+    st_mtime = 0x5747760e
+    st_ctime = 0x5747760e
+
+bb_opendir(path="/", fi=0xa9ed65f0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    opendir returned 0x0x1d45d20
+    fi:
+    flags = 0x00018800
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_readdir(path="/", buf=0x01d25450, filler=0x1f81c220, offset=0, fi=0xa9ed65f0)
+    readdir returned 0x0x1d45d50
+calling filler with name machin.txt
+calling filler with name .
+calling filler with name ..
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_releasedir(path="/", fi=0xa9ed6600)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x01d45d20
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000001d45d20
+    lock_owner = 0x0000000000000000
+
+bb_getattr(path="/", statbuf=0xa9ed6590)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    lstat returned 0
+    si:
+    st_dev = 2050
+    st_ino = 4855197
+    st_mode = 040775
+    st_nlink = 2
+    st_uid = 1000
+    st_gid = 1000
+    st_rdev = 0
+    st_size = 4096
+    st_blksize = 4096
+    st_blocks = 8
+    st_atime = 0x57478054
+    st_mtime = 0x57477f6b
+    st_ctime = 0x57477f6b
+
+bb_getattr(path="/machin.txt", statbuf=0xa9ed65c0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/machin.txt", fpath = "/home/romain/TestFS/rootDir/machin.txt"
+    lstat returned 0
+    si:
+    st_dev = 2050
+    st_ino = 4855198
+    st_mode = 0100664
+    st_nlink = 1
+    st_uid = 1000
+    st_gid = 1000
+    st_rdev = 0
+    st_size = 0
+    st_blksize = 4096
+    st_blocks = 0
+    st_atime = 0x57477f4d
+    st_mtime = 0x5747760e
+    st_ctime = 0x5747760e
+
+bb_open(path"/machin.txt", fi=0xa9ed66b0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/machin.txt", fpath = "/home/romain/TestFS/rootDir/machin.txt"
+    open returned 5
+    fi:
+    flags = 0x00008001
+    fh_old = 0x00000000
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000000000005
+    lock_owner = 0x0000000000000000
+
+bb_truncate(path="/machin.txt", newsize=0)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/machin.txt", fpath = "/home/romain/TestFS/rootDir/machin.txt"
+    truncate returned 0
+
+bb_getattr(path="/machin.txt", statbuf=0xa9ed6500)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/machin.txt", fpath = "/home/romain/TestFS/rootDir/machin.txt"
+    lstat returned 0
+    si:
+    st_dev = 2050
+    st_ino = 4855198
+    st_mode = 0100664
+    st_nlink = 1
+    st_uid = 1000
+    st_gid = 1000
+    st_rdev = 0
+    st_size = 0
+    st_blksize = 4096
+    st_blocks = 0
+    st_atime = 0x57477f4d
+    st_mtime = 0x574783a3
+    st_ctime = 0x574783a3
+
+bb_flush(path="/machin.txt", fi=0xa9ed66b0)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x00000005
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000000000005
+    lock_owner = 0x2a40a47fe28c90f0
+
+bb_write(path="/machin.txt", buf=0x1fc30060, size=13, offset=0, fi=0xa9ed6720)
+    fi:
+    flags = 0x00008001
+    fh_old = 0x00000005
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000000000005
+    lock_owner = 0x0000000000000000
+    pwrite returned 13
+
+bb_flush(path="/machin.txt", fi=0xa9ed66b0)
+    fi:
+    flags = 0x00000000
+    fh_old = 0x00000005
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000000000005
+    lock_owner = 0x2a40a47fe28c90f0
+
+bb_release(path="/machin.txt", fi=0xa9ed66b0)
+    fi:
+    flags = 0x00008001
+    fh_old = 0x00000005
+    writepage = 0
+    direct_io = 0
+    keep_cache = 0
+    fh = 0x0000000000000005
+    lock_owner = 0x3e008d2cde2ef641
+    close returned 0
+
+bb_getattr(path="/", statbuf=0xa9ed6590)
+    bb_fullpath:  rootdir = "/home/romain/TestFS/rootDir", path = "/", fpath = "/home/romain/TestFS/rootDir/"
+    lstat returned 0
+    si:
+    st_dev = 2050
+    st_ino = 4855197
+    st_mode = 040775
+    st_nlink = 2
+    st_uid = 1000
+    st_gid = 1000
+    st_rdev = 0
+    st_size = 4096
+    st_blksize = 4096
+    st_blocks = 8
+    st_atime = 0x57478054
+    st_mtime = 0x57477f6b
+    st_ctime = 0x57477f6b
+
+bb_destroy(userdata=0x01d24010)

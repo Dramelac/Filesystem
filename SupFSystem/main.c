@@ -124,6 +124,31 @@ int supFS_opendir(const char *path, struct fuse_file_info *fi)
 
     return returnV;
 }
+/*static int supFS_setattr(const char *path, const char *name, const char *value, size_t size, int flags) {
+
+    int returnV = 0;
+    char fullPath[PATH_MAX];
+
+
+    returnV = //lsetxattr(fullPath, name, value, size, flags);
+    if(returnV < 0){
+        returnV = log_error("supFS_write");
+    }
+
+    return returnV;
+}*/
+static int supFS_write(const char *path, const char *buf, size_t size, off_t offset,
+                      struct fuse_file_info *fi) {
+
+    int returnV = 0;
+
+    returnV = pwrite(fi->fh, buf, size, offset);
+    if(returnV < 0){
+        returnV = log_error("supFS_write");
+    }
+
+    return returnV;
+}
 
 static struct fuse_operations fuseStruct_callback = {
         .getattr = supFS_getattr,
@@ -132,6 +157,7 @@ static struct fuse_operations fuseStruct_callback = {
         .readdir = supFS_readdir,
         .opendir = supFS_opendir,
         .access = supFS_access,
+        .write = supFS_write,
 };
 
 int main(int argc, char *argv[])

@@ -849,7 +849,7 @@ struct fuse_operations bb_oper = {
   .destroy = bb_destroy,
   .access = bb_access,
   .ftruncate = bb_ftruncate,
-  .fgetattr = bb_fgetattr
+  .fgetattr = bb_fgetattr,
 };
 
 void bb_usage()
