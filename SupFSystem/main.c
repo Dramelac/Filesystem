@@ -2,8 +2,13 @@
 
 #include <fuse.h>
 #include <string.h>
+#include <dirent.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <errno.h>
-#include <stdio.h>
+
+char *fpath[PATH_MAX];
 
 static const char *filepath = "/file";
 static const char *filename = "file";
@@ -75,6 +80,6 @@ static struct fuse_operations fuseStruct_callback = {
 
 int main(int argc, char *argv[])
 {
-    printf("hello in SupFSystem\n");
+
     return fuse_main(argc, argv, &fuseStruct_callback, NULL);
 }
