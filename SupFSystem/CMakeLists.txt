@@ -12,6 +12,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 find_package(FUSE REQUIRED)
 
 include_directories(${FUSE_INCLUDE_DIR})
-add_executable(SupFSystem main.c)
+add_executable(SupFSystem main.c SupFS_log.c SupFS_log.h)
 target_link_libraries(SupFSystem ${FUSE_LIBRARIES})
 

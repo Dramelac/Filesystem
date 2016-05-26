@@ -1,5 +1,6 @@
 #define FUSE_USE_VERSION 26
 
+#include "SupFS_log.h"
 #include <fuse.h>
 #include <string.h>
 #include <dirent.h>
@@ -15,9 +16,11 @@ struct supFS_state{
 };
 #define SUPFS_DATA ((struct supFS_state *) fuse_get_context()->private_data)
 
-static void supFS_fullpath(char fullPath[PATH_MAX],char *path){
+static void supFS_fullpath(char fullPath[PATH_MAX],const char *path){
+
     strcpy(fullPath, SUPFS_DATA->rootDir);//pwd = rootdir
     strncat(fullPath,path,PATH_MAX);//rootdir + shortpath
+
 }
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
@@ -39,8 +42,8 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
     return -ENOENT;
 }
 
-static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
-                            off_t offset, struct fuse_file_info *fi) {
+static int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+                         off_t offset, struct fuse_file_info *fi) {
     (void) offset;
     (void) fi;
 
@@ -52,12 +55,25 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
     return 0;
 }
 
-static int open_callback(const char *path, struct fuse_file_info *fi) {
-    return 0;
+static int supFS_open(const char *path, struct fuse_file_info *fi) {
+
+    int returnV = 0;
+    int fd;
+
+    char fullPath[PATH_MAX];
+
+    supFS_fullpath(fullPath,path);
+    fd = open(fullPath,fi->flags);
+    if(fd<0){
+        returnV = log_error("supFS_open open");
+    }
+
+
+    return returnV;
 }
 
-static int read_callback(const char *path, char *buf, size_t size, off_t offset,
-                         struct fuse_file_info *fi) {
+static int supFS_read(const char *path, char *buf, size_t size, off_t offset,
+                      struct fuse_file_info *fi) {
 
     if (strcmp(path, filepath) == 0) {
         size_t len = strlen(filecontent);
@@ -79,9 +95,9 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
 static struct fuse_operations fuseStruct_callback = {
         .getattr = getattr_callback,
-        .open = open_callback,
-        .read = read_callback,
-        .readdir = readdir_callback,
+        .open = supFS_open,
+        .read = supFS_read,
+        .readdir = supFS_readdir,
 };
 
 int main(int argc, char *argv[])
