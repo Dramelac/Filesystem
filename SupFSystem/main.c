@@ -7,12 +7,18 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdio.h>
 
-char *fpath[PATH_MAX];
+struct supFS_state{
+    FILE *file;
+    char *rootDir;
+};
+#define SUPFS_DATA ((struct supFS_state *) fuse_get_context()->private_data)
 
-static const char *filepath = "/file";
-static const char *filename = "file";
-static const char *filecontent = "I'm the content of the only file available there\n";
+static void supFS_fullpath(char fullPath[PATH_MAX],char *path){
+    strcpy(fullPath, SUPFS_DATA->rootDir);//pwd = rootdir
+    strncat(fullPath,path,PATH_MAX);//rootdir + shortpath
+}
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
     memset(stbuf, 0, sizeof(struct stat));
