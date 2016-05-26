@@ -76,17 +76,18 @@ static int supFS_open(const char *path, struct fuse_file_info *fileInfo) {
         returnV = log_error("supFS_open");
     }
 
+    fileInfo->fh = fileOpenRValue;
 
     return returnV;
 }
 
 static int supFS_read(const char *path, char *buf, size_t size, off_t offset,
-                      struct fuse_file_info *fileInfo) {
+                      struct fuse_file_info *fi) {
 
     int returnV = 0;
 
-    returnV = pread(fileInfo->fh, buf, size, offset);
-    if(returnV<0){
+    returnV = pread(fi->fh, buf, size, offset);
+    if(returnV < 0){
         returnV = log_error("supFS_read");
     }
 
