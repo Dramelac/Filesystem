@@ -11,10 +11,16 @@
 #include <stdio.h>
 
 struct supFS_state{
-    FILE *file;
     char *rootDir;
 };
 #define SUPFS_DATA ((struct supFS_state *) fuse_get_context()->private_data)
+
+int process_error(int value){
+    if(value<0){
+        return -errno;
+    }
+    return value;
+}
 
 static void supFS_fullpath(char fullPath[PATH_MAX],const char *path){
 
@@ -71,10 +77,7 @@ static int supFS_open(const char *path, struct fuse_file_info *fileInfo) {
     char fullPath[PATH_MAX];
 
     supFS_fullpath(fullPath,path);
-    fileOpenRValue = open(fullPath,fileInfo->flags);
-    if(fileOpenRValue<0){
-        returnV = log_error("supFS_open");
-    }
+    returnV = process_error(open(fullPath,fileInfo->flags));
 
     fileInfo->fh = fileOpenRValue;
 
@@ -84,26 +87,17 @@ static int supFS_open(const char *path, struct fuse_file_info *fileInfo) {
 static int supFS_read(const char *path, char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi) {
 
-    int returnV = 0;
+    return process_error(pread(fi->fh, buf, size, offset));
 
-    returnV = pread(fi->fh, buf, size, offset);
-    if(returnV < 0){
-        returnV = log_error("supFS_read");
-    }
-
-    return returnV;
 }
 int supFS_access(const char *path, int mask){
 
-    int returnV = 0;
     char fullPath[PATH_MAX];
 
     supFS_fullpath(fullPath,path);
 
-    if(returnV<0){
-        returnV= log_error("supFS_access");
-    }
-    return returnV;
+    return process_error(access(fullPath,mask));
+
 }
 
 int supFS_opendir(const char *path, struct fuse_file_info *fi)
@@ -140,31 +134,23 @@ int supFS_opendir(const char *path, struct fuse_file_info *fi)
 static int supFS_write(const char *path, const char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi) {
 
-    int returnV = 0;
 
-    returnV = pwrite(fi->fh, buf, size, offset);
-    if(returnV < 0){
-        returnV = log_error("supFS_write");
-    }
+    return process_error(pwrite(fi->fh, buf, size, offset));
 
-    return returnV;
 }
 
 int supFS_rename(const char *path, const char *newpath)
 {
     char fullPath[PATH_MAX];
     char fullnewpath[PATH_MAX];
-    int returnV = 0;
 
     supFS_fullpath(fullPath, path);
     supFS_fullpath(fullnewpath, newpath);
 
-    returnV = rename(fullPath, fullnewpath);
-    if (returnV < 0){
-        returnV = log_error("rename");
-    }
+    return process_error(rename(fullPath, fullnewpath));
 
-    return returnV;
+
+
 }
 
 int supFS_mknod(const char *path, mode_t mode, dev_t dev)
@@ -191,10 +177,29 @@ int supFS_mknod(const char *path, mode_t mode, dev_t dev)
     return returnV;
 }
 int supFS_mkdir(const char *path, mode_t mode){
+
     char fullPath[PATH_MAX];
     supFS_fullpath(fullPath,path);
-    mkdir(fullPath,mode);
+
+    return process_error(mkdir(fullPath,mode));
+
 }
+
+int supFS_rmdir(const char *path){
+    char fullPath[PATH_MAX];
+    supFS_fullpath(fullPath,path);
+    return process_error(rmdir(fullPath));
+}
+
+//For remove a file in directory
+int supFS_unlink(const char *path){
+    char fullPath[PATH_MAX];
+    supFS_fullpath(fullPath,path);
+
+    return process_error(unlink(fullPath));
+
+}
+
 
 static struct fuse_operations fuseStruct_callback = {
         .getattr = supFS_getattr,
@@ -207,6 +212,8 @@ static struct fuse_operations fuseStruct_callback = {
         .rename = supFS_rename,
         .mknod = supFS_mknod,
         .mkdir = supFS_mkdir,
+        .rmdir = supFS_rmdir,
+        .unlink = supFS_unlink,
 };
 
 int main(int argc, char *argv[])
