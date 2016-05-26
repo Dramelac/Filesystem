@@ -3,6 +3,7 @@
 #include <fuse.h>
 #include <string.h>
 #include <errno.h>
+#include <stdio.h>
 
 static const char *filepath = "/file";
 static const char *filename = "file";
@@ -65,7 +66,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     return -ENOENT;
 }
 
-static struct fuse_operations fuse_example_operations = {
+static struct fuse_operations fuseStruct_callback = {
         .getattr = getattr_callback,
         .open = open_callback,
         .read = read_callback,
@@ -74,5 +75,6 @@ static struct fuse_operations fuse_example_operations = {
 
 int main(int argc, char *argv[])
 {
-    return fuse_main(argc, argv, &fuse_example_operations, NULL);
+    printf("hello in SupFSystem\n");
+    return fuse_main(argc, argv, &fuseStruct_callback, NULL);
 }
