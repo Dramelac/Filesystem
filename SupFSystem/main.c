@@ -92,12 +92,25 @@ static int supFS_read(const char *path, char *buf, size_t size, off_t offset,
 
     return returnV;
 }
+int supFS_access(const char *path, int mask){
+
+    int returnV = 0;
+    char fullPath[PATH_MAX];
+
+    supFS_fullpath(fullPath,path);
+
+    if(returnV<0){
+        returnV= log_error("supFS_access");
+    }
+    return returnV;
+}
 
 static struct fuse_operations fuseStruct_callback = {
         .getattr = supFS_getattr,
         .open = supFS_open,
         .read = supFS_read,
         .readdir = supFS_readdir,
+        .access = supFS_access,
 };
 
 int main(int argc, char *argv[])
