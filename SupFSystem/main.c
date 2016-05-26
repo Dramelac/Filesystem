@@ -105,11 +105,31 @@ int supFS_access(const char *path, int mask){
     return returnV;
 }
 
+int supFS_opendir(const char *path, struct fuse_file_info *fi)
+{
+    DIR *direntFileHandle;
+    int returnV = 0;
+    char fullPath[PATH_MAX];
+
+    supFS_fullpath(fullPath, path);
+
+    // open dir + check content
+    direntFileHandle = opendir(fullPath);
+    if (direntFileHandle == NULL) {
+        returnV = log_error("bb_opendir");
+    }
+
+    fi->fh = (intptr_t) direntFileHandle;
+
+    return returnV;
+}
+
 static struct fuse_operations fuseStruct_callback = {
         .getattr = supFS_getattr,
         .open = supFS_open,
         .read = supFS_read,
         .readdir = supFS_readdir,
+        .opendir = supFS_opendir,
         .access = supFS_access,
 };
 
