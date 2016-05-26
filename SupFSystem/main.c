@@ -150,6 +150,47 @@ static int supFS_write(const char *path, const char *buf, size_t size, off_t off
     return returnV;
 }
 
+int supFS_rename(const char *path, const char *newpath)
+{
+    char fullPath[PATH_MAX];
+    char fullnewpath[PATH_MAX];
+    int returnV = 0;
+
+    supFS_fullpath(fullPath, path);
+    supFS_fullpath(fullnewpath, newpath);
+
+    returnV = rename(fullPath, fullnewpath);
+    if (returnV < 0){
+        returnV = log_error("rename");
+    }
+
+    return returnV;
+}
+
+int supFS_mknod(const char *path, mode_t mode, dev_t dev)
+{
+    int returnV;
+    char fullPath[PATH_MAX];
+
+    supFS_fullpath(fullPath, path);
+
+    // check different file type
+    if (S_ISREG(mode)) {
+        returnV = open(fullPath, O_CREAT | O_EXCL | O_WRONLY, mode);
+        if (returnV >= 0){
+            returnV = close(returnV);
+        }
+    } else
+    if (S_ISFIFO(mode)) {
+        returnV = mkfifo(fullPath, mode);
+    }
+    else {
+        returnV = mknod(fullPath, mode, dev);
+    }
+
+    return returnV;
+}
+
 static struct fuse_operations fuseStruct_callback = {
         .getattr = supFS_getattr,
         .open = supFS_open,
@@ -158,6 +199,8 @@ static struct fuse_operations fuseStruct_callback = {
         .opendir = supFS_opendir,
         .access = supFS_access,
         .write = supFS_write,
+        .rename = supFS_rename,
+        .mknod = supFS_mknod,
 };
 
 int main(int argc, char *argv[])
