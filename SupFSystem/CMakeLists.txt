@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(SupFSystem)
+project(SupFSystem VERSION 0.0.1 LANGUAGES C)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_FILE_OFFSET_BITS=64")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEUBG} -Wall --pedantic -g")
@@ -12,8 +12,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 find_package(FUSE REQUIRED)
 
 include_directories(${FUSE_INCLUDE_DIR})
-
-set(SOURCE_FILES main.cpp)
-add_executable(SupFSystem ${SOURCE_FILES})
-
+add_executable(SupFSystem main.c)
 target_link_libraries(SupFSystem ${FUSE_LIBRARIES})
+
