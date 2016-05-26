@@ -190,6 +190,11 @@ int supFS_mknod(const char *path, mode_t mode, dev_t dev)
 
     return returnV;
 }
+int supFS_mkdir(const char *path, mode_t mode){
+    char fullPath[PATH_MAX];
+    supFS_fullpath(fullPath,path);
+    mkdir(fullPath,mode);
+}
 
 static struct fuse_operations fuseStruct_callback = {
         .getattr = supFS_getattr,
@@ -201,6 +206,7 @@ static struct fuse_operations fuseStruct_callback = {
         .write = supFS_write,
         .rename = supFS_rename,
         .mknod = supFS_mknod,
+        .mkdir = supFS_mkdir,
 };
 
 int main(int argc, char *argv[])
