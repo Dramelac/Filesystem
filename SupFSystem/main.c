@@ -77,7 +77,10 @@ static int supFS_open(const char *path, struct fuse_file_info *fileInfo) {
     char fullPath[PATH_MAX];
 
     supFS_fullpath(fullPath,path);
-    returnV = process_error(open(fullPath,fileInfo->flags));
+    fileOpenRValue = open(fullPath,fileInfo->flags);
+    if(fileOpenRValue<0){
+        returnV = log_error("supFS_open");
+    }
 
     fileInfo->fh = fileOpenRValue;
 
@@ -87,9 +90,16 @@ static int supFS_open(const char *path, struct fuse_file_info *fileInfo) {
 static int supFS_read(const char *path, char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi) {
 
-    return process_error(pread(fi->fh, buf, size, offset));
+    int returnV = 0;
 
+    returnV = pread(fi->fh, buf, size, offset);
+    if(returnV < 0){
+        returnV = log_error("supFS_read");
+    }
+
+    return returnV;
 }
+
 int supFS_access(const char *path, int mask){
 
     char fullPath[PATH_MAX];
