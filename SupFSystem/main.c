@@ -124,12 +124,8 @@ int supFS_truncate(const char *path, off_t newsize)
     char fullPath[PATH_MAX];
 
     supFS_fullpath(fullPath, path);
-    int returnV = truncate(fullPath, newsize);
-    if (returnV < 0){
-        returnV = -errno;
-    }
+    return process_error(truncate(fullPath, newsize));
 
-    return returnV;
 }
 
 static int supFS_write(const char *path, const char *buf, size_t size, off_t offset,
@@ -184,7 +180,7 @@ int supFS_chmod(const char *path, mode_t mode)
 
     supFS_fullpath(fpath, path);
 
-    return chmod(fpath, mode);
+    return process_error(chmod(fpath, mode));
 }
 
 int supFS_chown(const char *path, uid_t uid, gid_t gid)
@@ -194,7 +190,7 @@ int supFS_chown(const char *path, uid_t uid, gid_t gid)
 
     supFS_fullpath(fpath, path);
 
-    return chown(fpath, uid, gid);
+    return process_error(chown(fpath, uid, gid));
 }
 
 int supFS_mkdir(const char *path, mode_t mode){
