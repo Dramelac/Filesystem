@@ -111,7 +111,7 @@ int supFS_opendir(const char *path, struct fuse_file_info *fi)
     // open dir + check content
     direntFileHandle = opendir(fullPath);
     if (direntFileHandle == NULL) {
-        returnV = log_error("bb_opendir");
+        returnV = log_error("supFS_opendir");
     }
 
     fi->fh = (intptr_t) direntFileHandle;
