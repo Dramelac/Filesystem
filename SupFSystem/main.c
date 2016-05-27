@@ -217,6 +217,13 @@ int supFS_unlink(const char *path){
 
 }
 
+int supFS_utime(const char *path, struct utimbuf *ubuf)
+{
+    char fullPath[PATH_MAX];
+    supFS_fullpath(fullPath, path);
+
+    return process_error(utime(fullPath, ubuf));
+}
 
 static struct fuse_operations fuseStruct_callback = {
         .getattr = supFS_getattr,
@@ -234,6 +241,7 @@ static struct fuse_operations fuseStruct_callback = {
         .truncate = supFS_truncate,
         .chmod = supFS_chmod,
         .chown = supFS_chown,
+        .utime = supFS_utime,
 };
 
 int main(int argc, char *argv[])
