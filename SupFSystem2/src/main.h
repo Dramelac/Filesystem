@@ -34,14 +34,6 @@
 #include <fuse.h>
 #include <ext2fs/ext2fs.h>
 
-#if !defined(FUSE_VERSION) || (FUSE_VERSION < 26)
-#error "***********************************************************"
-#error "*                                                         *"
-#error "*     Compilation requires at least FUSE version 2.6.0!   *"
-#error "*                                                         *"
-#error "***********************************************************"
-#endif
-
 /* extra definitions not yet included in ext2fs.h */
 #define EXT2_FILE_SHARED_INODE 0x8000
 errcode_t ext2fs_file_close2(ext2_file_t file, void (*close_callback) (struct ext2_inode *inode, int flags));

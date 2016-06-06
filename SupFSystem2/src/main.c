@@ -297,10 +297,7 @@ static const struct fuse_operations ext2fs_ops = {
         .flush          = op_flush,
         .release	= op_release,
         .fsync          = op_fsync,
-        .setxattr       = NULL,
         .getxattr       = op_getxattr,
-        .listxattr      = NULL,
-        .removexattr    = NULL,
         .opendir        = op_open,
         .readdir        = op_readdir,
         .releasedir     = op_release,
@@ -311,9 +308,7 @@ static const struct fuse_operations ext2fs_ops = {
         .create         = op_create,
         .ftruncate      = op_ftruncate,
         .fgetattr       = op_fgetattr,
-        .lock           = NULL,
         .utimens        = op_utimens,
-        .bmap           = NULL,
 };
 
 int main (int argc, char *argv[])
