@@ -1,23 +1,3 @@
-/**
- * Copyright (c) 2008-2015 Alper Akcan <alper.akcan@gmail.com>
- * Copyright (c) 2009 Renzo Davoli <renzo@cs.unibo.it>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program (in the main directory of the fuse-ext2
- * distribution in the file COPYING); if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
- */
-
 #include "main.h"
 
 static const char *HOME = "http://github.com/alperakcan/fuse-ext2/";
@@ -127,7 +107,7 @@ static int parse_options (int argc, char *argv[], struct supFs_data *opts)
                 opts->debug = 1;
                 break;
             default:
-                debugf_main("Unknown option '%s'", argv[optind - 1]);
+                log_error("Unknown options");
                 return -1;
         }
     }
@@ -137,7 +117,7 @@ static int parse_options (int argc, char *argv[], struct supFs_data *opts)
         if (optarg[0] != '/') {
             char fulldevice[PATH_MAX+1];
             if (!realpath(optarg, fulldevice)) {
-                debugf_main("Cannot mount %s", optarg);
+                log_error("Cannot mount device");
                 free(opts->device);
                 opts->device = NULL;
                 return -1;
@@ -152,16 +132,16 @@ static int parse_options (int argc, char *argv[], struct supFs_data *opts)
     }
 
     if (optind < argc) {
-        debugf_main("You must specify exactly one device and exactly one mount point");
+        log_error("error arg number, please specify device and mount point");
         return -1;
     }
 
     if (!opts->device) {
-        debugf_main("No device is specified");
+        log_error("error device");
         return -1;
     }
     if (!opts->mnt_point) {
-        debugf_main("No mountpoint is specified");
+        log_error("error mountpoint");
         return -1;
     }
 
@@ -180,7 +160,7 @@ static char * parse_mount_options (const char *orig_opts, struct supFs_data *opt
     *ret = 0;
     options = strdup(orig_opts);
     if (!options) {
-        debugf_main("strdup failed");
+        log_error("strdup failed");
         return NULL;
     }
 
@@ -189,48 +169,51 @@ static char * parse_mount_options (const char *orig_opts, struct supFs_data *opt
         opt = strsep(&val, "=");
         if (!strcmp(opt, "ro")) { /* Read-only mount. */
             if (val) {
-                debugf_main("'ro' option should not have value");
-                goto err_exit;
+                log_error("'ro' option should not have value");
+                free(ret);
+                ret = NULL;
             }
             opts->readonly = 1;
             strcat(ret, "ro,");
         } else if (!strcmp(opt, "rw")) { /* Read-write mount */
             if (val) {
-                debugf_main("'rw' option should not have value");
-                goto err_exit;
+                log_error("'rw' option should not have value");
+                free(ret);
+                ret = NULL;
             }
             opts->readonly = 0;
             strcat(ret, "rw,");
         } else if (!strcmp(opt, "rw+")) { /* Read-write mount */
             if (val) {
-                debugf_main("'rw+' option should not have value");
-                goto err_exit;
+                log_error("'rw+' option should not have value");
+                free(ret);
+                ret = NULL;
             }
             opts->readonly = 0;
             opts->force = 1;
             strcat(ret, "rw,");
         } else if (!strcmp(opt, "debug")) { /* enable debug */
             if (val) {
-                debugf_main("'debug' option should not have value");
-                goto err_exit;
+                log_error("'debug' option should not have value");
+                free(ret);
+                ret = NULL;
             }
             opts->debug = 1;
             strcat(ret, "debug,");
         } else if (!strcmp(opt, "silent")) { /* keep silent */
             if (val) {
-                debugf_main("'silent' option should not have value");
-                goto err_exit;
+                log_error("'silent' option should not have value");
+                free(ret);
+                ret = NULL;
             }
             opts->silent = 1;
         } else if (!strcmp(opt, "force")) { /* enable read/write */
             if (val) {
-                debugf_main("'force option should no have value");
-                goto err_exit;
+                log_error("'force option should no have value");
+                free(ret);
+                ret = NULL;
             }
             opts->force = 1;
-#if __FreeBSD__ == 10
-            strcat(ret, "force,");
-#endif
         } else { /* Probably FUSE option. */
             strcat(ret, opt);
             if (val) {
@@ -253,31 +236,12 @@ static char * parse_mount_options (const char *orig_opts, struct supFs_data *opt
     }
     strcat(ret, "fsname=");
     strcat(ret, opts->device);
-#if __FreeBSD__ == 10
-    strcat(ret, ",fstypename=");
-	strcat(ret, "ext2");
-	strcat(ret, ",volname=");
-	if (opts->volname == NULL || opts->volname[0] == '\0') {
-		s = strrchr(opts->device, '/');
-		if (s != NULL) {
-			strcat(ret, s + 1);
-		} else {
-			strcat(ret, opts->device);
-		}
-	} else {
-		strcat(ret, opts->volname);
-	}
-#endif
-    exit:
+
     free(options);
     return ret;
-    err_exit:
-    free(ret);
-    ret = NULL;
-    goto exit;
 }
 
-static const struct fuse_operations ext2fs_ops = {
+static struct fuse_operations fuseStruct_callback = {
         .getattr        = op_getattr,
         //.readlink       = op_readlink,
         .mknod          = op_mknod,
@@ -373,7 +337,7 @@ int main (int argc, char *argv[])
     }
 
     if (returnValue == 0) {
-        returnValue = fuse_main(fargs.argc, fargs.argv, &ext2fs_ops, &dataOptionsStruct);
+        returnValue = fuse_main(fargs.argc, fargs.argv, &fuseStruct_callback, &dataOptionsStruct);
     }
 
     log_info("Exit fuse FS");
