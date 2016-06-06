@@ -1,303 +1,386 @@
+/**
+ * Copyright (c) 2008-2015 Alper Akcan <alper.akcan@gmail.com>
+ * Copyright (c) 2009 Renzo Davoli <renzo@cs.unibo.it>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program (in the main directory of the fuse-ext2
+ * distribution in the file COPYING); if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
 #include "main.h"
 
+static const char *HOME = "http://github.com/alperakcan/fuse-ext2/";
 
-int process_error(int value){
-    if(value<0){
-        return -errno;
-    }
-    return value;
-}
+#if __FreeBSD__ == 10
+static char def_opts[] = "allow_other,default_permissions,local,";
+static char def_opts_rd[] = "noappledouble,";
+#else
+static char def_opts[] = "allow_other,default_permissions,";
+static char def_opts_rd[] = "";
+#endif
 
-static void supFS_fullpath(char fullPath[PATH_MAX],const char *path){
+static const char *usage_msg =
+        "\n"
+                "%s %s %d - FUSE EXT2FS Driver\n"
+                "\n"
+                "Copyright (C) 2008-2015 Alper Akcan <alper.akcan@gmail.com>\n"
+                "Copyright (C) 2009 Renzo Davoli <renzo@cs.unibo.it>\n"
+                "\n"
+                "Usage:    %s <device|image_file> <mount_point> [-o option[,...]]\n"
+                "\n"
+                "Options:  ro, force, allow_others\n"
+                "          Please see details in the manual.\n"
+                "\n"
+                "Example:  fuse-ext2 /dev/sda1 /mnt/sda1\n"
+                "\n"
+                "%s\n"
+                "\n";
 
-    strcpy(fullPath, SUPFS_DATA->rootDir);//pwd = rootdir
-    strncat(fullPath,path,PATH_MAX);//rootdir + shortpath
-
-}
-
-static int supFS_getattr(const char *path, struct stat *statbuffer) {
-    int rt;
-    ext2_ino_t ino;
-    struct ext2_inode inode;
-    ext2_filsys e2fs = current_ext2fs();
-    //log_info("getAttr path :", path);
-    log_error("C");
-    rt = do_check(path);
-    log_error("D");
-    if (rt != 0) {
-        log_error("do check error");
-        return rt;
-    }
-    rt = do_readinode(e2fs, path, &ino, &inode);
-    log_error("E");
-    if (rt) {
-        //log_info("do_readinode(%s, &ino, &vnode); failed / ", path);
-        return rt;
-    }
-    log_error("F");
-    do_fillstatbuf(e2fs, ino, &inode, statbuffer);
-    log_info("succes", "getAttr");
-    return 0;
-}
-
-static int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-                         off_t offset, struct fuse_file_info *fi) {
-
-    int rt;
-    errcode_t rc;
-    ext2_ino_t ino;
-    struct ext2_inode inode;
-    struct dir_walk_data dwd={
-            .buf = buf,
-            .filler = filler};
-    ext2_filsys e2fs = current_ext2fs();
-
-    rt = do_readinode(e2fs, path, &ino, &inode);
-    if (rt) {
-        log_info("do_readinode(%s, &ino, &inode); failed", path);
-        return rt;
-    }
-
-    rc = ext2fs_dir_iterate2(e2fs,ino, DIRENT_FLAG_INCLUDE_EMPTY, NULL, walk_dir, &dwd);
-
-    if (rc) {
-        log_info("Error while trying to ext2fs_dir_iterate %s", path);
-        return -EIO;
-    }
-
-    return 0;
-}
-
-static int supFS_open(const char *path, struct fuse_file_info *fileInfo) {
-
-    ext2_file_t efile;
-    ext2_filsys e2fs = current_ext2fs();
-
-    efile = do_open(e2fs, path, fileInfo->flags);
-    if (efile == NULL) {
-        log_error("do_open; failed");
-        return -ENOENT;
-    }
-    fileInfo->fh = (uint64_t) efile;
-
-    return 0;
-}
-
-static int supFS_read(const char *path, char *buf, size_t size, off_t offset,
-                      struct fuse_file_info *fi) {
-
-    __u64 pos;
-    errcode_t rc;
-    unsigned int bytes;
-    ext2_file_t efile = EXT2FS_FILE(fi->fh);
-    ext2_filsys e2fs = current_ext2fs();
-
-    efile = do_open(e2fs, path, O_RDONLY);
-    rc = ext2fs_file_llseek(efile, offset, SEEK_SET, &pos);
-    if (rc) {
-        fs_release(efile);
-        return -EINVAL;
-    }
-
-    rc = ext2fs_file_read(efile, buf, size, &bytes);
-    if (rc) {
-        fs_release(efile);
-        return -EIO;
-    }
-    return bytes;
-}
-
-int supFS_access(const char *path, int mask){
-
-    char fullPath[PATH_MAX];
-
-    supFS_fullpath(fullPath,path);
-
-    return process_error(access(fullPath,mask));
-
-}
-
-int supFS_opendir(const char *path, struct fuse_file_info *fi)
+static int strappend (char **dest, const char *append)
 {
-    DIR *direntFileHandle;
-    int returnV = 0;
-    char fullPath[PATH_MAX];
+    char *p;
+    size_t size;
 
-    supFS_fullpath(fullPath, path);
-
-    // open dir + check content
-    direntFileHandle = opendir(fullPath);
-    if (direntFileHandle == NULL) {
-        returnV = log_error("supFS_opendir");
+    if (!dest) {
+        return -1;
+    }
+    if (!append) {
+        return 0;
     }
 
-    fi->fh = (intptr_t) direntFileHandle;
-
-    return returnV;
-}
-
-int supFS_truncate(const char *path, off_t newsize)
-{
-    char fullPath[PATH_MAX];
-
-    supFS_fullpath(fullPath, path);
-    return process_error(truncate(fullPath, newsize));
-
-}
-
-static int supFS_write(const char *path, const char *buf, size_t size, off_t offset,
-                      struct fuse_file_info *fi) {
-
-
-    return process_error(pwrite(fi->fh, buf, size, offset));
-
-}
-
-int supFS_rename(const char *path, const char *newpath)
-{
-    char fullPath[PATH_MAX];
-    char fullnewpath[PATH_MAX];
-
-    supFS_fullpath(fullPath, path);
-    supFS_fullpath(fullnewpath, newpath);
-
-    return process_error(rename(fullPath, fullnewpath));
-
-
-
-}
-
-int supFS_mknod(const char *path, mode_t mode, dev_t dev)
-{
-    int returnV;
-    char fullPath[PATH_MAX];
-
-    supFS_fullpath(fullPath, path);
-
-    // check different file type
-    if (S_ISREG(mode)) {
-        returnV = open(fullPath, O_CREAT | O_EXCL | O_WRONLY, mode);
-        if (returnV >= 0){
-            returnV = close(returnV);
-        }
-    } else
-    if (S_ISFIFO(mode)) {
-        returnV = mkfifo(fullPath, mode);
-    }
-    else {
-        returnV = mknod(fullPath, mode, dev);
+    size = strlen(append) + 1;
+    if (*dest) {
+        size += strlen(*dest);
     }
 
-    return returnV;
-}
-
-int supFS_chmod(const char *path, mode_t mode)
-{
-    char fpath[PATH_MAX];
-
-    supFS_fullpath(fpath, path);
-
-    return process_error(chmod(fpath, mode));
-}
-
-int supFS_chown(const char *path, uid_t uid, gid_t gid)
-
-{
-    char fpath[PATH_MAX];
-
-    supFS_fullpath(fpath, path);
-
-    return process_error(chown(fpath, uid, gid));
-}
-
-int supFS_mkdir(const char *path, mode_t mode){
-
-    char fullPath[PATH_MAX];
-    supFS_fullpath(fullPath,path);
-
-    return process_error(mkdir(fullPath,mode));
-
-}
-
-int supFS_rmdir(const char *path){
-    char fullPath[PATH_MAX];
-    supFS_fullpath(fullPath,path);
-    return process_error(rmdir(fullPath));
-}
-
-//For remove a file in directory
-int supFS_unlink(const char *path){
-    char fullPath[PATH_MAX];
-    supFS_fullpath(fullPath,path);
-
-    return process_error(unlink(fullPath));
-
-}
-
-int supFS_utime(const char *path, struct utimbuf *ubuf)
-{
-    char fullPath[PATH_MAX];
-    supFS_fullpath(fullPath, path);
-
-    return process_error(utime(fullPath, ubuf));
-}
-
-static struct fuse_operations fuseStruct_callback = {
-        .getattr = supFS_getattr,
-        .open = supFS_open,
-        .read = supFS_read,
-        .readdir = supFS_readdir,
-        .opendir = supFS_open,
-        //.access = supFS_access,
-        //.write = supFS_write,
-        //.rename = supFS_rename,
-        //.mknod = supFS_mknod,
-        //.mkdir = supFS_mkdir,
-        //.rmdir = supFS_rmdir,
-        //.unlink = supFS_unlink,
-        //.truncate = supFS_truncate,
-        //.chmod = supFS_chmod,
-        //.chown = supFS_chown,
-        //.utime = supFS_utime,
-};
-
-int main(int argc, char *argv[])
-{
-    /*
-    if ((getuid() == 0) || (geteuid() == 0)) {
-        printf("Root privilege forbidden, security fault.\n");
-        return 1;
-    }*/
-
-
-    int fuse_return;
-    struct supFS_state *supfs_data;
-
-    if ((argc < 3) || (argv[argc-2][0] == '-') || (argv[argc-1][0] == '-')) {
-        // check arg count + last two arg not options but real directory
-        printf("USAGE : command [options] mountDirectory rootDirectory");
-    }
-
-    supfs_data = malloc(sizeof(struct supFS_state));
-    if (supfs_data == NULL) {
-        printf("error mallox data");
+    p = realloc(*dest, size);
+    if (!p) {
+        debugf_main("Memory realloction failed");
         return -1;
     }
 
+    if (*dest) {
+        strcat(p, append);
+    } else {
+        strcpy(p, append);
+    }
+    *dest = p;
 
-    supfs_data->rootDir = realpath(argv[argc-1], NULL);
-    // remove rootDir
-    argv[argc-1] = NULL;
-    argc--;
+    return 0;
+}
 
-    log_info("Starting fuse FS", "");
-    // run fuce
-    fuse_return = fuse_main(argc, argv, &fuseStruct_callback, supfs_data);
+static void usage (void)
+{
+    printf(usage_msg, PACKAGE, VERSION, fuse_version(), PACKAGE, HOME);
+}
 
-    // print return value
-    printf("fuse return %d\n", fuse_return);
-    log_info("fuse terminated", "");
+static int parse_options (int argc, char *argv[], struct extfs_data *opts)
+{
+    int c;
 
-    free(supfs_data);
-    return fuse_return;
+    static const char *sopt = "o:hv";
+    static const struct option lopt[] = {
+            { "options",	 required_argument,	NULL, 'o' },
+            { "help",	 no_argument,		NULL, 'h' },
+            { "verbose",	 no_argument,		NULL, 'v' },
+            { NULL,		 0,			NULL,  0  }
+    };
+
+#if 0
+    printf("arguments;\n");
+	for (c = 0; c < argc; c++) {
+		printf("%d: %s\n", c, argv[c]);
+	}
+	printf("done\n");
+#endif
+
+    opterr = 0; /* We'll handle the errors, thank you. */
+
+    while ((c = getopt_long(argc, argv, sopt, lopt, NULL)) != -1) {
+        switch (c) {
+            case 'o':
+                if (opts->options)
+                if (strappend(&opts->options, ","))
+                    return -1;
+                if (strappend(&opts->options, optarg))
+                    return -1;
+                break;
+            case 'h':
+                usage();
+                exit(9);
+            case 'v':
+                /*
+                 * We must handle the 'verbose' option even if
+                 * we don't use it because mount(8) passes it.
+                 */
+                opts->debug = 1;
+                break;
+            default:
+                debugf_main("Unknown option '%s'", argv[optind - 1]);
+                return -1;
+        }
+    }
+
+    if (optind < argc) {
+        optarg=argv[optind++];
+        if (optarg[0] != '/') {
+            char fulldevice[PATH_MAX+1];
+            if (!realpath(optarg, fulldevice)) {
+                debugf_main("Cannot mount %s", optarg);
+                free(opts->device);
+                opts->device = NULL;
+                return -1;
+            } else
+                opts->device = strdup(fulldevice);
+        } else
+            opts->device = strdup(optarg);
+    }
+
+    if (optind < argc) {
+        opts->mnt_point = argv[optind++];
+    }
+
+    if (optind < argc) {
+        debugf_main("You must specify exactly one device and exactly one mount point");
+        return -1;
+    }
+
+    if (!opts->device) {
+        debugf_main("No device is specified");
+        return -1;
+    }
+    if (!opts->mnt_point) {
+        debugf_main("No mountpoint is specified");
+        return -1;
+    }
+
+    return 0;
+}
+
+static char * parse_mount_options (const char *orig_opts, struct extfs_data *opts)
+{
+    char *options, *s, *opt, *val, *ret;
+
+    ret = malloc(strlen(def_opts) + strlen(def_opts_rd) + strlen(orig_opts) + 256 + PATH_MAX);
+    if (!ret) {
+        return NULL;
+    }
+
+    *ret = 0;
+    options = strdup(orig_opts);
+    if (!options) {
+        debugf_main("strdup failed");
+        return NULL;
+    }
+
+    s = options;
+    while (s && *s && (val = strsep(&s, ","))) {
+        opt = strsep(&val, "=");
+        if (!strcmp(opt, "ro")) { /* Read-only mount. */
+            if (val) {
+                debugf_main("'ro' option should not have value");
+                goto err_exit;
+            }
+            opts->readonly = 1;
+            strcat(ret, "ro,");
+        } else if (!strcmp(opt, "rw")) { /* Read-write mount */
+            if (val) {
+                debugf_main("'rw' option should not have value");
+                goto err_exit;
+            }
+            opts->readonly = 0;
+            strcat(ret, "rw,");
+        } else if (!strcmp(opt, "rw+")) { /* Read-write mount */
+            if (val) {
+                debugf_main("'rw+' option should not have value");
+                goto err_exit;
+            }
+            opts->readonly = 0;
+            opts->force = 1;
+            strcat(ret, "rw,");
+        } else if (!strcmp(opt, "debug")) { /* enable debug */
+            if (val) {
+                debugf_main("'debug' option should not have value");
+                goto err_exit;
+            }
+            opts->debug = 1;
+            strcat(ret, "debug,");
+        } else if (!strcmp(opt, "silent")) { /* keep silent */
+            if (val) {
+                debugf_main("'silent' option should not have value");
+                goto err_exit;
+            }
+            opts->silent = 1;
+        } else if (!strcmp(opt, "force")) { /* enable read/write */
+            if (val) {
+                debugf_main("'force option should no have value");
+                goto err_exit;
+            }
+            opts->force = 1;
+#if __FreeBSD__ == 10
+            strcat(ret, "force,");
+#endif
+        } else { /* Probably FUSE option. */
+            strcat(ret, opt);
+            if (val) {
+                strcat(ret, "=");
+                strcat(ret, val);
+            }
+            strcat(ret, ",");
+        }
+    }
+
+    if (opts->readonly == 0 && opts->force == 0) {
+        fprintf(stderr, "Mounting %s Read-Only.\nUse \'force\' or \'rw+\' options to enable Read-Write mode\n",opts->device);
+        opts->readonly = 1;
+    }
+
+    strcat(ret, def_opts);
+    if (opts->readonly == 1) {
+        strcat(ret, def_opts_rd);
+        strcat(ret, "ro,");
+    }
+    strcat(ret, "fsname=");
+    strcat(ret, opts->device);
+#if __FreeBSD__ == 10
+    strcat(ret, ",fstypename=");
+	strcat(ret, "ext2");
+	strcat(ret, ",volname=");
+	if (opts->volname == NULL || opts->volname[0] == '\0') {
+		s = strrchr(opts->device, '/');
+		if (s != NULL) {
+			strcat(ret, s + 1);
+		} else {
+			strcat(ret, opts->device);
+		}
+	} else {
+		strcat(ret, opts->volname);
+	}
+#endif
+    exit:
+    free(options);
+    return ret;
+    err_exit:
+    free(ret);
+    ret = NULL;
+    goto exit;
+}
+
+static const struct fuse_operations ext2fs_ops = {
+        .getattr        = op_getattr,
+        .readlink       = op_readlink,
+        .mknod          = op_mknod,
+        .mkdir          = op_mkdir,
+        .unlink         = op_unlink,
+        .rmdir          = op_rmdir,
+        .symlink        = op_symlink,
+        .rename         = op_rename,
+        .link           = op_link,
+        .chmod          = op_chmod,
+        .chown          = op_chown,
+        .truncate       = op_truncate,
+        .open           = op_open,
+        .read           = op_read,
+        .write          = op_write,
+        .statfs         = op_statfs,
+        .flush          = op_flush,
+        .release	= op_release,
+        .fsync          = op_fsync,
+        .setxattr       = NULL,
+        .getxattr       = op_getxattr,
+        .listxattr      = NULL,
+        .removexattr    = NULL,
+        .opendir        = op_open,
+        .readdir        = op_readdir,
+        .releasedir     = op_release,
+        .fsyncdir       = op_fsync,
+        .init		= op_init,
+        .destroy	= op_destroy,
+        .access         = op_access,
+        .create         = op_create,
+        .ftruncate      = op_ftruncate,
+        .fgetattr       = op_fgetattr,
+        .lock           = NULL,
+        .utimens        = op_utimens,
+        .bmap           = NULL,
+};
+
+int main (int argc, char *argv[])
+{
+    int err = 0;
+    struct stat sbuf;
+    char *parsed_options = NULL;
+    struct fuse_args fargs = FUSE_ARGS_INIT(0, NULL);
+    struct extfs_data opts;
+
+    debugf_main("version:'%s', fuse_version:'%d / %d / %d'", VERSION, FUSE_USE_VERSION,  FUSE_VERSION, fuse_version());
+
+    memset(&opts, 0, sizeof(opts));
+
+    if (parse_options(argc, argv, &opts)) {
+        usage();
+        return -1;
+    }
+
+    if (stat(opts.device, &sbuf)) {
+        debugf_main("Failed to access '%s'", opts.device);
+        err = -3;
+        goto err_out;
+    }
+
+    if (do_probe(&opts) != 0) {
+        debugf_main("Probe failed");
+        err = -4;
+        goto err_out;
+    }
+
+    parsed_options = parse_mount_options(opts.options ? opts.options : "", &opts);
+    if (!parsed_options) {
+        err = -2;
+        goto err_out;
+    }
+
+    debugf_main("opts.device: %s", opts.device);
+    debugf_main("opts.mnt_point: %s", opts.mnt_point);
+    debugf_main("opts.volname: %s", (opts.volname != NULL) ? opts.volname : "");
+    debugf_main("opts.options: %s", opts.options);
+    debugf_main("parsed_options: %s", parsed_options);
+
+    if (fuse_opt_add_arg(&fargs, PACKAGE) == -1 ||
+        fuse_opt_add_arg(&fargs, "-s") == -1 ||
+        fuse_opt_add_arg(&fargs, "-o") == -1 ||
+        fuse_opt_add_arg(&fargs, parsed_options) == -1 ||
+        fuse_opt_add_arg(&fargs, opts.mnt_point) == -1) {
+        debugf_main("Failed to set FUSE options");
+        fuse_opt_free_args(&fargs);
+        err = -5;
+        goto err_out;
+    }
+
+    if (opts.readonly == 0) {
+        debugf_main("mounting read-write");
+    } else {
+        debugf_main("mounting read-only");
+    }
+
+    fuse_main(fargs.argc, fargs.argv, &ext2fs_ops, &opts);
+
+    err_out:
+    fuse_opt_free_args(&fargs);
+    free(parsed_options);
+    free(opts.options);
+    free(opts.device);
+    free(opts.volname);
+    return err;
 }
