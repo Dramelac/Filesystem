@@ -319,10 +319,9 @@ int main (int argc, char *argv[])
     struct fuse_args fargs = FUSE_ARGS_INIT(0, NULL);
     struct supFs_data dataOptionsStruct;
 
-    char *msg;
-    asprintf(&msg, "version:'%s', fuse_version:'%d / %d / %d'", VERSION, FUSE_USE_VERSION,  FUSE_VERSION, fuse_version());
+    char msg[100];
+    snprintf(msg, sizeof(msg), "version:'%s', fuse_version:'%d / %d / %d'", VERSION, FUSE_USE_VERSION,  FUSE_VERSION, fuse_version());
     log_info(msg);
-    free(msg);
 
     memset(&dataOptionsStruct, 0, sizeof(dataOptionsStruct));
 
@@ -332,11 +331,12 @@ int main (int argc, char *argv[])
     }
 
     if (stat(dataOptionsStruct.device, &sbuf)) {
-        debugf_main("Failed to access '%s'", dataOptionsStruct.device);
+        snprintf(msg, sizeof(msg), "Failed to access '%s'", dataOptionsStruct.device);
+        log_error(msg);
         returnValue = -3;
     }
     if (do_probe(&dataOptionsStruct) != 0) {
-        debugf_main("Probe failed");
+        log_error("Probe failed");
         returnValue = -4;
     }
 
@@ -345,11 +345,16 @@ int main (int argc, char *argv[])
         returnValue = -2;
     }
 
-    debugf_main("dataOptionsStruct.device: %s", dataOptionsStruct.device);
-    debugf_main("dataOptionsStruct.mnt_point: %s", dataOptionsStruct.mnt_point);
-    debugf_main("dataOptionsStruct.volname: %s", (dataOptionsStruct.volname != NULL) ? dataOptionsStruct.volname : "");
-    debugf_main("dataOptionsStruct.options: %s", dataOptionsStruct.options);
-    debugf_main("parsed_options: %s", parsed_options);
+    snprintf(msg, sizeof(msg), "dataOptionsStruct.device: %s", dataOptionsStruct.device);
+    log_info(msg);
+    snprintf(msg, sizeof(msg), "dataOptionsStruct.mnt_point: %s", dataOptionsStruct.mnt_point);
+    log_info(msg);
+    snprintf(msg, sizeof(msg), "dataOptionsStruct.volname: %s", (dataOptionsStruct.volname != NULL) ? dataOptionsStruct.volname : "");
+    log_info(msg);
+    snprintf(msg, sizeof(msg), "dataOptionsStruct.options: %s", dataOptionsStruct.options);
+    log_info(msg);
+    snprintf(msg, sizeof(msg), "parsed_options: %s", parsed_options);
+    log_info(msg);
 
     if (fuse_opt_add_arg(&fargs, PACKAGE) == -1 ||
         fuse_opt_add_arg(&fargs, "-s") == -1 ||
