@@ -46,7 +46,7 @@ errcode_t ext2fs_file_close2(ext2_file_t file, void (*close_callback) (struct ex
 /* max timeout to flush bitmaps, to reduce inconsistencies */
 #define FLUSH_BITMAPS_TIMEOUT 10
 
-struct extfs_data {
+struct supFs_data {
     unsigned char debug;
     unsigned char silent;
     unsigned char force;
@@ -62,7 +62,7 @@ struct extfs_data {
 static inline ext2_filsys current_ext2fs(void)
 {
     struct fuse_context *mycontext=fuse_get_context();
-    struct extfs_data *e2data=mycontext->private_data;
+    struct supFs_data *e2data=mycontext->private_data;
     time_t now=time(NULL);
     if ((now - e2data->last_flush) > FLUSH_BITMAPS_TIMEOUT) {
         ext2fs_write_bitmaps(e2data->e2fs);
@@ -99,7 +99,7 @@ static inline void debug_printf (const char *function, char *file, int line, con
 {
 	va_list args;
 	struct fuse_context *mycontext=fuse_get_context();
-	struct extfs_data *e2data=mycontext->private_data;
+	struct supFs_data *e2data=mycontext->private_data;
 	if (e2data && (e2data->debug == 0 || e2data->silent == 1)) {
 		return;
 	}
@@ -141,7 +141,7 @@ void op_destroy (void *userdata);
 
 /* helper functions */
 
-int do_probe (struct extfs_data *opts);
+int do_probe (struct supFs_data *opts);
 
 int do_label (void);
 

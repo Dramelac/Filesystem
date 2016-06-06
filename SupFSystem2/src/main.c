@@ -85,7 +85,7 @@ static void usage (void)
     printf(usage_msg, PACKAGE, VERSION, fuse_version(), PACKAGE, HOME);
 }
 
-static int parse_options (int argc, char *argv[], struct extfs_data *opts)
+static int parse_options (int argc, char *argv[], struct supFs_data *opts)
 {
     int c;
 
@@ -168,7 +168,7 @@ static int parse_options (int argc, char *argv[], struct extfs_data *opts)
     return 0;
 }
 
-static char * parse_mount_options (const char *orig_opts, struct extfs_data *opts)
+static char * parse_mount_options (const char *orig_opts, struct supFs_data *opts)
 {
     char *options, *s, *opt, *val, *ret;
 
@@ -317,65 +317,65 @@ int main (int argc, char *argv[])
     struct stat sbuf;
     char *parsed_options = NULL;
     struct fuse_args fargs = FUSE_ARGS_INIT(0, NULL);
-    struct extfs_data opts;
+    struct supFs_data dataOptionsStruct;
 
     debugf_main("version:'%s', fuse_version:'%d / %d / %d'", VERSION, FUSE_USE_VERSION,  FUSE_VERSION, fuse_version());
 
-    memset(&opts, 0, sizeof(opts));
+    memset(&dataOptionsStruct, 0, sizeof(dataOptionsStruct));
 
-    if (parse_options(argc, argv, &opts)) {
+    if (parse_options(argc, argv, &dataOptionsStruct)) {
         usage();
         return -1;
     }
 
-    if (stat(opts.device, &sbuf)) {
-        debugf_main("Failed to access '%s'", opts.device);
+    if (stat(dataOptionsStruct.device, &sbuf)) {
+        debugf_main("Failed to access '%s'", dataOptionsStruct.device);
         err = -3;
         goto err_out;
     }
 
-    if (do_probe(&opts) != 0) {
+    if (do_probe(&dataOptionsStruct) != 0) {
         debugf_main("Probe failed");
         err = -4;
         goto err_out;
     }
 
-    parsed_options = parse_mount_options(opts.options ? opts.options : "", &opts);
+    parsed_options = parse_mount_options(dataOptionsStruct.options ? dataOptionsStruct.options : "", &dataOptionsStruct);
     if (!parsed_options) {
         err = -2;
         goto err_out;
     }
 
-    debugf_main("opts.device: %s", opts.device);
-    debugf_main("opts.mnt_point: %s", opts.mnt_point);
-    debugf_main("opts.volname: %s", (opts.volname != NULL) ? opts.volname : "");
-    debugf_main("opts.options: %s", opts.options);
+    debugf_main("dataOptionsStruct.device: %s", dataOptionsStruct.device);
+    debugf_main("dataOptionsStruct.mnt_point: %s", dataOptionsStruct.mnt_point);
+    debugf_main("dataOptionsStruct.volname: %s", (dataOptionsStruct.volname != NULL) ? dataOptionsStruct.volname : "");
+    debugf_main("dataOptionsStruct.options: %s", dataOptionsStruct.options);
     debugf_main("parsed_options: %s", parsed_options);
 
     if (fuse_opt_add_arg(&fargs, PACKAGE) == -1 ||
         fuse_opt_add_arg(&fargs, "-s") == -1 ||
         fuse_opt_add_arg(&fargs, "-o") == -1 ||
         fuse_opt_add_arg(&fargs, parsed_options) == -1 ||
-        fuse_opt_add_arg(&fargs, opts.mnt_point) == -1) {
+        fuse_opt_add_arg(&fargs, dataOptionsStruct.mnt_point) == -1) {
         debugf_main("Failed to set FUSE options");
         fuse_opt_free_args(&fargs);
         err = -5;
         goto err_out;
     }
 
-    if (opts.readonly == 0) {
+    if (dataOptionsStruct.readonly == 0) {
         debugf_main("mounting read-write");
     } else {
         debugf_main("mounting read-only");
     }
 
-    fuse_main(fargs.argc, fargs.argv, &ext2fs_ops, &opts);
+    fuse_main(fargs.argc, fargs.argv, &ext2fs_ops, &dataOptionsStruct);
 
     err_out:
     fuse_opt_free_args(&fargs);
     free(parsed_options);
-    free(opts.options);
-    free(opts.device);
-    free(opts.volname);
+    free(dataOptionsStruct.options);
+    free(dataOptionsStruct.device);
+    free(dataOptionsStruct.volname);
     return err;
 }

@@ -1,4 +1,4 @@
-#include <main.h>
+#include "main.h"
 
 /**
  * Copyright (c) 2008-2015 Alper Akcan <alper.akcan@gmail.com>
