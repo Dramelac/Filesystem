@@ -219,7 +219,7 @@ int do_killfilebyinode (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *ino
 
 #define VOLNAME_SIZE_MAX 16
 
-int do_probe (struct extfs_data *opts)
+int do_probe (struct supFs_data *opts)
 {
 	errcode_t rc;
 	ext2_filsys e2fs;
@@ -1043,7 +1043,7 @@ void * op_init (struct fuse_conn_info *conn)
 {
 	errcode_t rc;
 	struct fuse_context *cntx=fuse_get_context();
-	struct extfs_data *e2data=cntx->private_data;
+	struct supFs_data *e2data=cntx->private_data;
 
 	debugf("enter %s", e2data->device);
 
@@ -1350,7 +1350,7 @@ ext2_file_t do_open (ext2_filsys e2fs, const char *path, int flags)
 	ext2_file_t efile;
 	struct ext2_inode inode;
 	struct fuse_context *cntx = fuse_get_context();
-	struct extfs_data *e2data = cntx->private_data;
+	struct supFs_data *e2data = cntx->private_data;
 
 	debugf("enter");
 	debugf("path = %s", path);
