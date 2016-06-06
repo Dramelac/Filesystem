@@ -313,7 +313,7 @@ static const struct fuse_operations ext2fs_ops = {
 
 int main (int argc, char *argv[])
 {
-    int err = 0;
+    int returnValue = 0;
     struct stat sbuf;
     char *parsed_options = NULL;
     struct fuse_args fargs = FUSE_ARGS_INIT(0, NULL);
@@ -330,20 +330,16 @@ int main (int argc, char *argv[])
 
     if (stat(dataOptionsStruct.device, &sbuf)) {
         debugf_main("Failed to access '%s'", dataOptionsStruct.device);
-        err = -3;
-        goto err_out;
+        returnValue = -3;
     }
-
     if (do_probe(&dataOptionsStruct) != 0) {
         debugf_main("Probe failed");
-        err = -4;
-        goto err_out;
+        returnValue = -4;
     }
 
     parsed_options = parse_mount_options(dataOptionsStruct.options ? dataOptionsStruct.options : "", &dataOptionsStruct);
     if (!parsed_options) {
-        err = -2;
-        goto err_out;
+        returnValue = -2;
     }
 
     debugf_main("dataOptionsStruct.device: %s", dataOptionsStruct.device);
@@ -359,8 +355,7 @@ int main (int argc, char *argv[])
         fuse_opt_add_arg(&fargs, dataOptionsStruct.mnt_point) == -1) {
         debugf_main("Failed to set FUSE options");
         fuse_opt_free_args(&fargs);
-        err = -5;
-        goto err_out;
+        returnValue = -5;
     }
 
     if (dataOptionsStruct.readonly == 0) {
@@ -369,13 +364,14 @@ int main (int argc, char *argv[])
         debugf_main("mounting read-only");
     }
 
-    fuse_main(fargs.argc, fargs.argv, &ext2fs_ops, &dataOptionsStruct);
+    if (returnValue == 0) {
+        returnValue = fuse_main(fargs.argc, fargs.argv, &ext2fs_ops, &dataOptionsStruct);
+    }
 
-    err_out:
     fuse_opt_free_args(&fargs);
     free(parsed_options);
     free(dataOptionsStruct.options);
     free(dataOptionsStruct.device);
     free(dataOptionsStruct.volname);
-    return err;
+    return returnValue;
 }
