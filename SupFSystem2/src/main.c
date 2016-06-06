@@ -361,20 +361,22 @@ int main (int argc, char *argv[])
         fuse_opt_add_arg(&fargs, "-o") == -1 ||
         fuse_opt_add_arg(&fargs, parsed_options) == -1 ||
         fuse_opt_add_arg(&fargs, dataOptionsStruct.mnt_point) == -1) {
-        debugf_main("Failed to set FUSE options");
+        log_error("Failed to set FUSE options");
         fuse_opt_free_args(&fargs);
         returnValue = -5;
     }
 
     if (dataOptionsStruct.readonly == 0) {
-        debugf_main("mounting read-write");
+        log_info("mounting read-write");
     } else {
-        debugf_main("mounting read-only");
+        log_info("mounting read-only");
     }
 
     if (returnValue == 0) {
         returnValue = fuse_main(fargs.argc, fargs.argv, &ext2fs_ops, &dataOptionsStruct);
     }
+
+    log_info("Exit fuse FS");
 
     fuse_opt_free_args(&fargs);
     free(parsed_options);
