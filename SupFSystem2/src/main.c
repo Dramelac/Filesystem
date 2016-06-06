@@ -319,7 +319,10 @@ int main (int argc, char *argv[])
     struct fuse_args fargs = FUSE_ARGS_INIT(0, NULL);
     struct supFs_data dataOptionsStruct;
 
-    debugf_main("version:'%s', fuse_version:'%d / %d / %d'", VERSION, FUSE_USE_VERSION,  FUSE_VERSION, fuse_version());
+    char *msg;
+    asprintf(&msg, "version:'%s', fuse_version:'%d / %d / %d'", VERSION, FUSE_USE_VERSION,  FUSE_VERSION, fuse_version());
+    log_info(msg);
+    free(msg);
 
     memset(&dataOptionsStruct, 0, sizeof(dataOptionsStruct));
 

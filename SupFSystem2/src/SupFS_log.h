@@ -12,6 +12,6 @@
 #include <string.h>
 
 int log_error(char *name);
-void log_info(char *msg, const char* add);
+void log_info(char *msg);
 
 #endif //SUPFSYSTEM_SUPFS_LOG_H

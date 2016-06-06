@@ -33,6 +33,7 @@
 
 #include <fuse.h>
 #include <ext2fs/ext2fs.h>
+#include "SupFS_log.h"
 
 /* extra definitions not yet included in ext2fs.h */
 #define EXT2_FILE_SHARED_INODE 0x8000
