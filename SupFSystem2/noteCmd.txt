@@ -1,0 +1,7 @@
+./configure
+make
+sudo make install
+sudo make uninstall
+
+supFS -d -s -f mountDir/ fs.ext2
+sudo umount mountDir (si core dump)

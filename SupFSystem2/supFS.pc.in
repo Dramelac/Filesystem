@@ -1,0 +1,8 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: supFS
+Description: supFS ext2 support with FUSE
+Version: @VERSION@
