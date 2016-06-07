@@ -124,24 +124,18 @@ int readNode (ext2_filsys e2fs, const char *path, ext2_ino_t *ino, struct ext2_i
 }
 
 
-int do_writeinode (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode)
+int writeNode(ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode)
 {
-	int rt;
-	errcode_t rc;
+	int returnValue = 0;
 	if (inode->i_links_count < 1) {
-		rt = changeFileInode(e2fs, ino, inode);
-		if (rt) {
-			debugf("changeFileInode(e2fs, ino, inode); failed");
-			return rt;
+		returnValue = changeFileInode(e2fs, ino, inode);
+		if (returnValue) {
+			return returnValue;
 		}
-	} else {
-		rc = ext2fs_write_inode(e2fs, ino, inode);
-		if (rc) {
-			debugf("ext2fs_read_inode(e2fs, *ino, inode); failed");
-			return -EIO;
-		}
+	} else if (ext2fs_write_inode(e2fs, ino, inode)) {
+        return -EIO;
 	}
-	return 0;
+	return returnValue;
 }
 
 
@@ -318,9 +312,9 @@ int do_create (ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 		return -EIO;
 	}
 	inode.i_ctime = inode.i_mtime = tm;
-	rc = do_writeinode(e2fs, ino, &inode);
+	rc = writeNode(e2fs, ino, &inode);
 	if (rc) {
-		debugf("do_writeinode(e2fs, ino, &inode); failed");
+		debugf("writeNode(e2fs, ino, &inode); failed");
         free(p_path);
 		return -EIO;
 	}
@@ -516,9 +510,9 @@ int op_mkdir (const char *path, mode_t mode)
 		inode.i_uid = ctx->uid;
 		inode.i_gid = ctx->gid;
 	}
-	rc = do_writeinode(e2fs, ino, &inode);
+	rc = writeNode(e2fs, ino, &inode);
 	if (rc) {
-		debugf("do_writeinode(e2fs, ino, &inode); failed");
+		debugf("writeNode(e2fs, ino, &inode); failed");
         free(p_path);
 		return -EIO;
 	}
@@ -531,9 +525,9 @@ int op_mkdir (const char *path, mode_t mode)
 		return -EIO;
 	}
 	inode.i_ctime = inode.i_mtime = tm;
-	rc = do_writeinode(e2fs, ino, &inode);
+	rc = writeNode(e2fs, ino, &inode);
 	if (rc) {
-		debugf("do_writeinode(e2fs, ino, &inode); failed");
+		debugf("writeNode(e2fs, ino, &inode); failed");
         free(p_path);
 		return -EIO;
 	}
@@ -934,7 +928,7 @@ int op_rename (const char *source, const char *dest)
 			rc = op_unlink(dest);
 		}
 		if (rc) {
-			debugf("do_writeinode(e2fs, ino, inode); failed");
+			debugf("writeNode(e2fs, ino, inode); failed");
 			goto out;
 		}
 		rt = readNode(e2fs, p_dest, &d_dest_ino, &d_dest_inode);
@@ -975,9 +969,9 @@ int op_rename (const char *source, const char *dest)
 		if (d_src_inode.i_links_count > 1) {
 			d_src_inode.i_links_count--;
 		}
-		rc = do_writeinode(e2fs, d_src_ino, &d_src_inode);
+		rc = writeNode(e2fs, d_src_ino, &d_src_inode);
 		if (rc != 0) {
-			debugf("do_writeinode(e2fs, src_ino, &src_inode); failed");
+			debugf("writeNode(e2fs, src_ino, &src_inode); failed");
 			rt = -EIO;
 			goto out;
 		}
@@ -990,14 +984,14 @@ int op_rename (const char *source, const char *dest)
 
 	/* utimes and inodes update */
 	d_dest_inode.i_mtime = d_dest_inode.i_ctime = src_inode.i_ctime = e2fs->now ? e2fs->now : time(NULL);
-	rt = do_writeinode(e2fs, d_dest_ino, &d_dest_inode);
+	rt = writeNode(e2fs, d_dest_ino, &d_dest_inode);
 	if (rt != 0) {
-		debugf("do_writeinode(e2fs, d_dest_ino, &d_dest_inode); failed");
+		debugf("writeNode(e2fs, d_dest_ino, &d_dest_inode); failed");
 		goto out;
 	}
-	rt = do_writeinode(e2fs, src_ino, &src_inode);
+	rt = writeNode(e2fs, src_ino, &src_inode);
 	if (rt != 0) {
-		debugf("do_writeinode(e2fs, src_ino, &src_inode); failed");
+		debugf("writeNode(e2fs, src_ino, &src_inode); failed");
 		goto out;
 	}
 	debugf("done");
@@ -1142,9 +1136,9 @@ int op_rmdir (const char *path)
 	}
 	p_inode.i_mtime = e2fs->now ? e2fs->now : time(NULL);
 	p_inode.i_ctime = e2fs->now ? e2fs->now : time(NULL);
-	rc = do_writeinode(e2fs, p_ino, &p_inode);
+	rc = writeNode(e2fs, p_ino, &p_inode);
 	if (rc) {
-		debugf("do_writeinode(e2fs, ino, inode); failed");
+		debugf("writeNode(e2fs, ino, inode); failed");
         free(p_path);
 		return -EIO;
 	}
@@ -1195,9 +1189,9 @@ int op_truncate (const char *path, off_t length)
 		return rt;
 	}
 	inode.i_ctime = e2fs->now ? e2fs->now : time(NULL);
-	rt = do_writeinode(e2fs, ino, &inode);
+	rt = writeNode(e2fs, ino, &inode);
 	if (rt) {
-		debugf("do_writeinode(e2fs, ino, &inode); failed");
+		debugf("writeNode(e2fs, ino, &inode); failed");
 		do_release(efile);
 		return -EIO;
 	}
@@ -1272,9 +1266,9 @@ int op_unlink (const char *path)
 	}
 
 	p_inode.i_ctime = p_inode.i_mtime = e2fs->now ? e2fs->now : time(NULL);
-	rt = do_writeinode(e2fs, p_ino, &p_inode);
+	rt = writeNode(e2fs, p_ino, &p_inode);
 	if (rt) {
-		debugf("do_writeinode(e2fs, p_ino, &p_inode); failed");
+		debugf("writeNode(e2fs, p_ino, &p_inode); failed");
         free(p_path);
 		return -EIO;
 	}
@@ -1283,9 +1277,9 @@ int op_unlink (const char *path)
 		r_inode.i_links_count -= 1;
 	}
 	r_inode.i_ctime = e2fs->now ? e2fs->now : time(NULL);
-	rc = do_writeinode(e2fs, r_ino, &r_inode);
+	rc = writeNode(e2fs, r_ino, &r_inode);
 	if (rc) {
-		debugf("do_writeinode(e2fs, &r_ino, &r_inode); failed");
+		debugf("writeNode(e2fs, &r_ino, &r_inode); failed");
         free(p_path);
 		return -EIO;
 	}

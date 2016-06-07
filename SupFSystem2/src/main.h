@@ -90,7 +90,7 @@ void fillstatbuffer(ext2_filsys e2fs, ext2_ino_t ext2Ino, struct ext2_inode *ino
 
 int readNode (ext2_filsys e2fs, const char *path, ext2_ino_t *ino, struct ext2_inode *inode);
 
-int do_writeinode (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode);
+int writeNode(ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode);
 
 int changeFileInode(ext2_filsys e2fs, ext2_ino_t ext2Ino, struct ext2_inode *inode);
 
