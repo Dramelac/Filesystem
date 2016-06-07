@@ -238,86 +238,6 @@ int op_access (const char *path, int mask)
 }
 
 
-int op_chmod (const char *path, mode_t mode)
-{
-	int rt;
-	int mask;
-	time_t tm;
-	ext2_ino_t ino;
-	struct ext2_inode inode;
-	ext2_filsys e2fs = current_ext2fs();
-
-	debugf("enter");
-	debugf("path = %s 0%o", path, mode);
-
-	rt = do_check(path);
-	if (rt != 0) {
-		debugf("do_check(%s); failed", path);
-		return rt;
-	}
-
-	rt = do_readinode(e2fs, path, &ino, &inode);
-	if (rt) {
-		debugf("do_readinode(%s, &ino, &vnode); failed", path);
-		return rt;
-	}
-
-	tm = e2fs->now ? e2fs->now : time(NULL);
-	mask = S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID | S_ISVTX;
-	inode.i_mode = (inode.i_mode & ~mask) | (mode & mask);
-	inode.i_ctime = tm;
-
-	rt = do_writeinode(e2fs, ino, &inode);
-	if (rt) {
-		debugf("do_writeinode(e2fs, ino, &inode); failed");
-		return -EIO;
-	}
-
-	debugf("leave");
-	return 0;
-}
-
-
-int op_chown (const char *path, uid_t uid, gid_t gid)
-{
-	int rt;
-	ext2_ino_t ino;
-	struct ext2_inode inode;
-	ext2_filsys e2fs = current_ext2fs();
-
-	debugf("enter");
-	debugf("path = %s", path);
-	
-	rt = do_check(path);
-	if (rt != 0) {
-		debugf("do_check(%s); failed", path);
-		return rt;
-	}
-
-	rt = do_readinode(e2fs, path, &ino, &inode);
-	if (rt) {
-		debugf("do_readinode(%s, &ino, &vnode); failed", path);
-		return rt;
-	}
-	
-	if (uid != -1) {
-		ext2_write_uid(&inode, uid);
-	}
-	if (gid != -1) {
-		ext2_write_gid(&inode, gid);
-	}
-
-	rt = do_writeinode(e2fs, ino, &inode);
-	if (rt) {
-		debugf("do_writeinode(e2fs, ino, &inode); failed");
-		return -EIO;
-	}
-
-	debugf("leave");
-	return 0;
-}
-
-
 int do_modetoext2lag (mode_t mode)
 {
 	if (S_ISREG(mode)) {
@@ -524,35 +444,6 @@ void op_destroy (void *userdata)
 }
 
 
-int op_fgetattr (const char *path, struct stat *stbuf, struct fuse_file_info *fi)
-{
-	int rt;
-	ext2_ino_t ino;
-	struct ext2_inode inode;
-	ext2_filsys e2fs = current_ext2fs();
-
-	debugf("enter");
-	debugf("path = %s", path);
-	
-	rt = do_check(path);
-	if (rt != 0) {
-		debugf("do_check(%s); failed", path);
-		return rt;
-	}
-
-	rt = do_readinode(e2fs, path, &ino, &inode);
-	if (rt) {
-		debugf("do_readinode(%s, &ino, &vnode); failed", path);
-		return rt;
-	}
-	do_fillstatbuf(e2fs, ino, &inode, stbuf);
-
-	debugf("path: %s, size: %d", path, stbuf->st_size);
-	debugf("leave");
-	return 0;
-}
-
-
 int op_flush (const char *path, struct fuse_file_info *fi)
 {
 	errcode_t rc;
@@ -570,24 +461,6 @@ int op_flush (const char *path, struct fuse_file_info *fi)
 		return -EIO;
 	}
 	
-	debugf("leave");
-	return 0;
-}
-
-
-int op_fsync (const char *path, int datasync, struct fuse_file_info *fi)
-{
-	errcode_t rc;
-	ext2_filsys e2fs = current_ext2fs();
-
-	debugf("enter");
-	debugf("path = %s (%p)", path, fi);
-	
-	rc = ext2fs_flush(e2fs);
-	if (rc) {
-		return -EIO;
-	}
-
 	debugf("leave");
 	return 0;
 }
@@ -623,38 +496,6 @@ int op_getattr (const char *path, struct stat *stbuf)
 
 static int do_getxattr(ext2_filsys e2fs, struct ext2_inode *node, const char *name,
 		char *value, size_t size);
-
-int op_getxattr(const char *path, const char *name, char *value, size_t size) {
-	int rt;
-	ext2_ino_t ino;
-	struct ext2_inode inode;
-	ext2_filsys e2fs = current_ext2fs();
-
-	debugf("enter");
-	debugf("path = %s", path);
-	debugf("path = %s, %s, %p, %d", path, name, value, size);
-
-	rt = do_check(path);
-	if (rt != 0) {
-		debugf("do_check(%s); failed", path);
-		return rt;
-	}
-
-	rt = do_readinode(e2fs, path, &ino, &inode);
-	if (rt) {
-		debugf("do_readinode(%s, &ino, &inode); failed", path);
-		return rt;
-	}
-
-	rt = do_getxattr(e2fs, &inode, name, value, size);
-	if (rt < 0) {
-		debugf("do_getxattr(e2fs, inode, %s, value, %d); failed", name, size);
-		return rt;
-	}
-
-	debugf("leave");
-	return rt;
-}
 
 
 static int parse_name(const char *name, int *name_index, char **attr_name) {
@@ -752,90 +593,6 @@ void * op_init (struct fuse_conn_info *conn)
 	debugf("leave");
 
 	return e2data;
-}
-
-
-int op_link (const char *source, const char *dest)
-{
-	int rc;
-	char *p_path;
-	char *r_path;
-
-	ext2_ino_t s_ino;
-	ext2_ino_t d_ino;
-	struct ext2_inode s_inode;
-	struct ext2_inode d_inode;
-	ext2_filsys e2fs = current_ext2fs();
-
-	debugf("source: %s, dest: %s", source, dest);
-
-	rc = do_check(source);
-	if (rc != 0) {
-		debugf("do_check(%s); failed", source);
-		return rc;
-	}
-
-	rc = do_check_split(dest, &p_path, &r_path);
-	if (rc != 0) {
-		debugf("do_check(%s); failed", dest);
-		return rc;
-	}
-
-	debugf("parent: %s, child: %s", p_path, r_path);
-
-	rc = do_readinode(e2fs, p_path, &d_ino, &d_inode);
-	if (rc) {
-		debugf("do_readinode(%s, &ino, &inode); failed", p_path);
-		free_split(p_path, r_path);
-		return rc;
-	}
-
-	rc = do_readinode(e2fs, source, &s_ino, &s_inode);
-	if (rc) {
-		debugf("do_readinode(%s, &s_ino, &s_inode); failed", p_path);
-		free_split(p_path, r_path);
-		return rc;
-	}
-
-	do {
-		debugf("calling ext2fs_link(e2fs, %d, %s, %d, %d);", d_ino, r_path, s_ino, do_modetoext2lag(s_inode.i_mode));
-		rc = ext2fs_link(e2fs, d_ino, r_path, s_ino, do_modetoext2lag(s_inode.i_mode));
-		if (rc == EXT2_ET_DIR_NO_SPACE) {
-			debugf("calling ext2fs_expand_dir(e2fs, &d)", d_ino);
-			if (ext2fs_expand_dir(e2fs, d_ino)) {
-				debugf("error while expanding directory %s (%d)", p_path, d_ino);
-				free_split(p_path, r_path);
-				return -ENOSPC;
-			}
-		}
-	} while (rc == EXT2_ET_DIR_NO_SPACE);
-	if (rc) {
-		debugf("ext2fs_link(e2fs, %d, %s, %d, %d); failed", d_ino, r_path, s_ino, do_modetoext2lag(s_inode.i_mode));
-		free_split(p_path, r_path);
-		return -EIO;
-	}
-
-	d_inode.i_mtime = d_inode.i_ctime = s_inode.i_ctime = e2fs->now ? e2fs->now : time(NULL);
-	s_inode.i_links_count += 1;
-
-	rc = do_writeinode(e2fs, s_ino, &s_inode);
-	if (rc) {
-		debugf("do_writeinode(e2fs, s_ino, &s_inode); failed");
-		free_split(p_path, r_path);
-		return -EIO;
-	}
-
-	rc = do_writeinode(e2fs, d_ino, &d_inode);
-	if (rc) {
-		debugf("do_writeinode(e2fs, d_ino, &d_inode); failed");
-		free_split(p_path, r_path);
-		return -EIO;
-	}
-
-	free_split(p_path, r_path);
-	debugf("done");
-
-	return 0;
 }
 
 
@@ -1145,62 +902,6 @@ int op_readdir (const char *path, void *buf, fuse_fill_dir_t filler, off_t offse
 	if (rc) {
 		debugf("Error while trying to ext2fs_dir_iterate %s", path);
 		return -EIO;
-	}
-
-	debugf("leave");
-	return 0;
-}
-
-
-int op_readlink (const char *path, char *buf, size_t size)
-{
-	int rt;
-	size_t s;
-	errcode_t rc;
-	ext2_ino_t ino;
-	char *b = NULL;
-	char *pathname;
-	struct ext2_inode inode;
-	ext2_filsys e2fs = current_ext2fs();
-	
-	debugf("enter");
-	debugf("path = %s", path);
-
-	rt = do_readinode(e2fs, path, &ino, &inode);
-	if (rt) {
-		debugf("do_readinode(%s, &ino, &inode); failed", path);
-		return rt;
-	}
-	
-	if (!LINUX_S_ISLNK(inode.i_mode)) {
-		debugf("%s is not a link", path);
-		return -EINVAL;
-	}
-	
-	if (ext2fs_inode_data_blocks(e2fs, &inode)) {
-		rc = ext2fs_get_mem(EXT2_BLOCK_SIZE(e2fs->super), &b);
-		if (rc) {
-			debugf("ext2fs_get_mem(EXT2_BLOCK_SIZE(e2fs->super), &b); failed");
-			return -ENOMEM;
-		}
-		rc = io_channel_read_blk(e2fs->io, inode.i_block[0], 1, b);
-		if (rc) {
-			ext2fs_free_mem(&b);
-			debugf("io_channel_read_blk(e2fs->io, inode.i_block[0], 1, b); failed");
-			return -EIO;
-		}
-		pathname = b;
-	} else {
-		pathname = (char *) &(inode.i_block[0]);
-	}
-	
-	debugf("pathname: %s", pathname);
-	
-	s = (size < strlen(pathname) + 1) ? size : strlen(pathname) + 1;
-	snprintf(buf, s, "%s", pathname);
-	
-	if (b) {
-		ext2fs_free_mem(&b);
 	}
 
 	debugf("leave");
@@ -1660,101 +1361,6 @@ static int ext2_bg_num_gdb (ext2_filsys e2fs, int group)
 	return 1;
 }
 
-#define EXT2_BLOCKS_COUNT(s) ((s)->s_blocks_count | ((__u64) (s)->s_blocks_count_hi << 32))
-#define EXT2_RBLOCKS_COUNT(s) ((s)->s_r_blocks_count | ((__u64) (s)->s_r_blocks_count_hi << 32))
-#define EXT2_FBLOCKS_COUNT(s) ((s)->s_free_blocks_count | ((__u64) (s)->s_free_blocks_hi << 32))
-
-int op_statfs (const char *path, struct statvfs *buf)
-{
-	unsigned long long i;
-	unsigned long long s_gdb_count = 0;
-	unsigned long long s_groups_count = 0;
-	unsigned long long s_itb_per_group = 0;
-	unsigned long long s_overhead_last = 0;
-	unsigned long long s_inodes_per_block = 0;
-
-	ext2_filsys e2fs = current_ext2fs();
-
-	debugf("enter");
-
-	memset(buf, 0, sizeof(struct statvfs));
-
-	if (e2fs->super->s_default_mount_opts & EXT2_MOUNT_MINIX_DF) {
-		s_overhead_last = 0;
-	} else {
-		s_overhead_last = e2fs->super->s_first_data_block;
-		s_groups_count = ((EXT2_BLOCKS_COUNT(e2fs->super) - e2fs->super->s_first_data_block - 1) / e2fs->super->s_blocks_per_group) + 1;
-		s_gdb_count = (s_groups_count + EXT2_DESC_PER_BLOCK(e2fs->super) - 1) / EXT2_DESC_PER_BLOCK(e2fs->super);
-		for (i = 0; i < s_groups_count; i++) {
-			s_overhead_last += ext2_bg_has_super(e2fs, i) + ((ext2_bg_num_gdb(e2fs, i) == 0) ? 0 : s_gdb_count);
-		}
-		s_inodes_per_block = EXT2_BLOCK_SIZE(e2fs->super) / EXT2_INODE_SIZE(e2fs->super);
-		s_itb_per_group = e2fs->super->s_inodes_per_group / s_inodes_per_block;
-		s_overhead_last += (s_groups_count * (2 +  s_itb_per_group));
-	}
-	buf->f_bsize = EXT2_BLOCK_SIZE(e2fs->super);
-	buf->f_frsize = EXT2_FRAG_SIZE(e2fs->super);
-	buf->f_blocks = EXT2_BLOCKS_COUNT(e2fs->super) - s_overhead_last;
-	buf->f_bfree = EXT2_FBLOCKS_COUNT(e2fs->super);
-	if (EXT2_FBLOCKS_COUNT(e2fs->super) < EXT2_RBLOCKS_COUNT(e2fs->super)) {
-		buf->f_bavail = 0;
-	} else {
-		buf->f_bavail = EXT2_FBLOCKS_COUNT(e2fs->super) - EXT2_RBLOCKS_COUNT(e2fs->super);
-	}
-	buf->f_files = e2fs->super->s_inodes_count;
-	buf->f_ffree = e2fs->super->s_free_inodes_count;
-	buf->f_favail = e2fs->super->s_free_inodes_count;
-	buf->f_namemax = EXT2_NAME_LEN;
-
-	debugf("leave");
-	return 0;
-}
-
-
-int op_symlink (const char *sourcename, const char *destname)
-{
-	int rt;
-	size_t wr;
-	ext2_file_t efile;
-	ext2_filsys e2fs = current_ext2fs();
-	int sourcelen = strlen(sourcename);
-
-	debugf("enter");
-	debugf("source: %s, dest: %s", sourcename, destname);
-
-	/* a short symlink is stored in the inode (recycling the i_block array) */
-	if (sourcelen < (EXT2_N_BLOCKS * sizeof(__u32))) {
-		rt = do_create(e2fs, destname, LINUX_S_IFLNK | 0777, 0, sourcename);
-		if (rt != 0) {
-			debugf("do_create(%s, LINUX_S_IFLNK | 0777, FAST); failed", destname);
-			return rt;
-		}
-	} else {
-		rt = do_create(e2fs, destname, LINUX_S_IFLNK | 0777, 0, NULL);
-		if (rt != 0) {
-			debugf("do_create(%s, LINUX_S_IFLNK | 0777); failed", destname);
-			return rt;
-		}
-		efile = do_open(e2fs, destname, O_WRONLY);
-		if (efile == NULL) {
-			debugf("do_open(%s); failed", destname);
-			return -EIO;
-		}
-		wr = do_write(efile, sourcename, sourcelen, 0);
-		if (wr != strlen(sourcename)) {
-			debugf("do_write(efile, %s, %d, 0); failed", sourcename, strlen(sourcename) + 1);
-			return -EIO;
-		}
-		rt = do_release(efile);
-		if (rt != 0) {
-			debugf("do_release(efile); failed");
-			return rt;
-		}
-	}
-	debugf("leave");
-	return 0;
-}
-
 
 int op_truncate (const char *path, off_t length)
 {
@@ -1811,12 +1417,6 @@ int op_truncate (const char *path, off_t length)
 
 	debugf("leave");
 	return 0;
-}
-
-int op_ftruncate (const char *path, off_t length, struct fuse_file_info *fi)
-{
-	(void) fi;
-	return op_truncate(path, length);
 }
 
 
@@ -1898,42 +1498,6 @@ int op_unlink (const char *path)
 	}
 
 	free_split(p_path, r_path);
-	debugf("leave");
-	return 0;
-}
-
-
-int op_utimens (const char *path, const struct timespec tv[2])
-{
-	int rt;
-	ext2_ino_t ino;
-	struct ext2_inode inode;
-	ext2_filsys e2fs = current_ext2fs();
-
-	debugf("enter");
-	debugf("path = %s", path);
-	
-	rt = do_check(path);
-	if (rt != 0) {
-		debugf("do_check(%s); failed", path);
-		return rt;
-	}
-
-	rt = do_readinode(e2fs, path, &ino, &inode);
-	if (rt) {
-		debugf("do_readinode(%s, &ino, &vnode); failed", path);
-		return rt;
-	}
-	
-	inode.i_atime = tv[0].tv_sec;
-	inode.i_mtime = tv[0].tv_sec;
-
-	rt = do_writeinode(e2fs, ino, &inode);
-	if (rt) {
-		debugf("do_writeinode(e2fs, ino, &inode); failed");
-		return -EIO;
-	}
-
 	debugf("leave");
 	return 0;
 }
