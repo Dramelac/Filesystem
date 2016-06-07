@@ -110,7 +110,7 @@ int do_killfilebyinode (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *ino
 
 int op_access (const char *path, int mask);
 
-int op_getattr (const char *path, struct stat *stbuf);
+int supFS_getattr (const char *path, struct stat *stbuf);
 
 ext2_file_t do_open (ext2_filsys e2fs, const char *path, int flags);
 

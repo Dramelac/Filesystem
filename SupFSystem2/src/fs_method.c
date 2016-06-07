@@ -459,26 +459,26 @@ int op_flush (const char *path, struct fuse_file_info *fi)
 }
 
 
-int op_getattr (const char *path, struct stat *stbuf)
+int supFS_getattr (const char *path, struct stat *stbuf)
 {
-	int rt;
+	int returnValue;
 	ext2_ino_t ino;
 	struct ext2_inode inode;
 	ext2_filsys e2fs = current_ext2fs();
 
-	debugf("enter");
-	debugf("path = %s", path);
-
-	rt = do_check(path);
-	if (rt != 0) {
-		debugf("do_check(%s); failed", path);
-		return rt;
+	returnValue = do_check(path);
+	if (returnValue != 0) {
+		//debugf("do_check(%s); failed", path);
+        char loError[1000]="check() failed";
+        strcat(loError,path);
+        log_error(loError);
+		return returnValue;
 	}
 
-	rt = do_readinode(e2fs, path, &ino, &inode);
-	if (rt) {
+	returnValue = do_readinode(e2fs, path, &ino, &inode);
+	if (returnValue) {
 		debugf("do_readinode(%s, &ino, &vnode); failed", path);
-		return rt;
+		return returnValue;
 	}
 	do_fillstatbuf(e2fs, ino, &inode, stbuf);
 
@@ -486,10 +486,6 @@ int op_getattr (const char *path, struct stat *stbuf)
 	debugf("leave");
 	return 0;
 }
-
-static int do_getxattr(ext2_filsys e2fs, struct ext2_inode *node, const char *name,
-		char *value, size_t size);
-
 
 static int parse_name(const char *name, int *name_index, char **attr_name) {
 	char namespace[16];
@@ -511,49 +507,6 @@ static int parse_name(const char *name, int *name_index, char **attr_name) {
 	}
 
 	return -ENOTSUP;
-}
-
-static int do_getxattr(ext2_filsys e2fs, struct ext2_inode *node, const char *name,
-		char *value, size_t size) {
-	char *buf, *attr_start;
-	struct ext2_ext_attr_entry *entry;
-	char *entry_name, *value_name;
-	int name_index;
-	int res;
-
-	res = parse_name(name, &name_index, &value_name);
-	if (res < 0) {
-		return res;
-	}
-
-	buf = malloc(e2fs->blocksize);
-	if (!buf) {
-		return -ENOMEM;
-	}
-	ext2fs_read_ext_attr(e2fs, node->i_file_acl, buf);
-
-	attr_start = buf + sizeof(struct ext2_ext_attr_header);
-	entry = (struct ext2_ext_attr_entry *) attr_start;
-	res = -ENODATA;
-
-	while (!EXT2_EXT_IS_LAST_ENTRY(entry)) {
-		entry_name = (char *)entry + sizeof(struct ext2_ext_attr_entry);
-
-		if (name_index == entry->e_name_index &&
-				entry->e_name_len == strlen(value_name)) {
-			if (!strncmp(entry_name, value_name, entry->e_name_len)) {
-				if (size > 0) {
-					memcpy(value, buf + entry->e_value_offs, entry->e_value_size);
-				}
-				res = entry->e_value_size;
-				break;
-			}
-		}
-		entry = EXT2_EXT_ATTR_NEXT(entry);
-	}
-
-	free(buf);
-	return res;
 }
 
 
