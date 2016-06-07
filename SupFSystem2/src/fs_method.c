@@ -33,7 +33,7 @@ int check(const char *path)
 	return 0;
 }
 
-int do_check_split (const char *path, char **dirname, char **basename)
+int checkToDir(const char *path, char **dirname, char **basename)
 {
 	char *tmp;
 	char *cpath = strdup(path);
@@ -233,7 +233,7 @@ int do_create (ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 	debugf("enter");
 	debugf("path = %s, mode: 0%o", path, mode);
 
-	rt=do_check_split(path, &p_path, &r_path);
+	rt= checkToDir(path, &p_path, &r_path);
 
 	debugf("parent: %s, child: %s", p_path, r_path);
 
@@ -430,8 +430,6 @@ int supFS_getattr (const char *path, struct stat *stbuf)
 	}
     fillstatbuffer(e2fs, ino, &inode, stbuf);
 
-	debugf("path: %s, size: %d", path, stbuf->st_size);
-	debugf("leave");
 	return 0;
 }
 
@@ -480,7 +478,7 @@ int op_mkdir (const char *path, mode_t mode)
 	debugf("enter");
 	debugf("path = %s, mode: 0%o, dir:0%o", path, mode, LINUX_S_IFDIR);
 
-	rt = do_check_split(path, &p_path ,&r_path);
+	rt = checkToDir(path, &p_path, &r_path);
 	if (rt != 0) {
 		debugf("check(%s); failed", path);
 		return rt;
@@ -863,7 +861,7 @@ int op_rename (const char *source, const char *dest)
 
 	debugf("source: %s, dest: %s", source, dest);
 
-	rt = do_check_split(source, &p_src, &r_src);
+	rt = checkToDir(source, &p_src, &r_src);
 	if (rt != 0) {
 		debugf("check(%s); failed", source);
 		return rt;
@@ -871,7 +869,7 @@ int op_rename (const char *source, const char *dest)
 
 	debugf("src_parent: %s, src_child: %s", p_src, r_src);
 
-	rt = do_check_split(dest, &p_dest, &r_dest);
+	rt = checkToDir(dest, &p_dest, &r_dest);
 	if (rt != 0) {
 		debugf("check(%s); failed", dest);
 		return rt;
@@ -1093,9 +1091,9 @@ int op_rmdir (const char *path)
 	debugf("enter");
 	debugf("path = %s", path);
 
-	rt = do_check_split(path, &p_path, &r_path);
+	rt = checkToDir(path, &p_path, &r_path);
 	if (rt != 0) {
-		debugf("do_check_split: failed");
+		debugf("checkToDir: failed");
 		return rt;
 	}
 
@@ -1252,9 +1250,9 @@ int op_unlink (const char *path)
 		return rt;
 	}
 
-	rt = do_check_split(path, &p_path, &r_path);
+	rt = checkToDir(path, &p_path, &r_path);
 	if (rt != 0) {
-		debugf("do_check_split: failed");
+		debugf("checkToDir: failed");
 		return rt;
 	}
 
