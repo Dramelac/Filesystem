@@ -339,7 +339,7 @@ int op_create (const char *path, mode_t mode, struct fuse_file_info *fi)
 	debugf("enter");
 	debugf("path = %s, mode: 0%o", path, mode);
 
-	if (op_open(path, fi) == 0) {
+	if (supFS_open(path, fi) == 0) {
 		debugf("leave");
 		return 0;
 	}
@@ -349,8 +349,8 @@ int op_create (const char *path, mode_t mode, struct fuse_file_info *fi)
 		return rt;
 	}
 
-	if (op_open(path, fi)) {
-		debugf("op_open(path, fi); failed");
+	if (supFS_open(path, fi)) {
+		debugf("supFS_open(path, fi); failed");
 		return -EIO;
 	}
 
