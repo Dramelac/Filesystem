@@ -82,7 +82,7 @@ void op_destroy (void *userdata);
 
 /* helper functions */
 
-int do_check (const char *path);
+int check (const char *path);
 
 int do_check_split(const char *path, char **dirname,char **basename);
 
@@ -90,7 +90,7 @@ void free_split(char *dirname, char *basename);
 
 void do_fillstatbuf (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode, struct stat *st);
 
-int do_readinode (ext2_filsys e2fs, const char *path, ext2_ino_t *ino, struct ext2_inode *inode);
+int readNode (ext2_filsys e2fs, const char *path, ext2_ino_t *ino, struct ext2_inode *inode);
 
 int do_writeinode (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode);
 
