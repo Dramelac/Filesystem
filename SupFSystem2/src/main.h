@@ -84,7 +84,7 @@ void op_destroy (void *userdata);
 
 int check (const char *path);
 
-int do_check_split(const char *path, char **dirname,char **basename);
+int checkToDir(const char *path, char **dirname, char **basename);
 
 void fillstatbuffer(ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode, struct stat *statBuff);
 
