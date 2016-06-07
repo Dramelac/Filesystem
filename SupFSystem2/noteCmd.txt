@@ -1,3 +1,4 @@
+a l'endroit ou se trouve l'executable 
 ./configure
 make
 sudo make install
