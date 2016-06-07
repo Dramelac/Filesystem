@@ -577,7 +577,7 @@ int op_mkdir (const char *path, mode_t mode)
 		return rt;
 	}
 
-	debugf("parent: %s, child: %s, pathmax: %d", p_path, r_path, PATH_MAX);
+	debugf("parent: %s, child: %s, pathmax: %d", p_path, r_path);
 
 	rt = do_readinode(e2fs, p_path, &ino, &inode);
 	if (rt) {

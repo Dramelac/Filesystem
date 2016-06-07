@@ -22,9 +22,6 @@
 #define EXT2_FILE_SHARED_INODE 0x8000
 errcode_t ext2fs_file_close2(ext2_file_t file, void (*close_callback) (struct ext2_inode *inode, int flags));
 
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
 
 #define EXT2FS_FILE(efile) ((void *) (unsigned long) (efile))
 /* max timeout to flush bitmaps, to reduce inconsistencies */
