@@ -4,6 +4,7 @@
 /ar-lib
 /compile
 /config*
+!configure.ac
 /depcomp
 /install-sh
 /libtool
