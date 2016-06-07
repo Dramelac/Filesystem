@@ -20,8 +20,6 @@
 
 /* extra definitions not yet included in ext2fs.h */
 #define EXT2_FILE_SHARED_INODE 0x8000
-errcode_t ext2fs_file_close2(ext2_file_t file, void (*close_callback) (struct ext2_inode *inode, int flags));
-
 
 #define EXT2FS_FILE(efile) ((void *) (unsigned long) (efile))
 
@@ -86,23 +84,23 @@ int check (const char *path);
 
 int checkToDir(const char *path, char **dirname, char **basename);
 
-void fillstatbuffer(ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode, struct stat *statBuff);
+void fillstatbuffer(ext2_filsys e2fs, ext2_ino_t ext2Ino, struct ext2_inode *inode, struct stat *statBuff);
 
 int readNode (ext2_filsys e2fs, const char *path, ext2_ino_t *ino, struct ext2_inode *inode);
 
-int do_writeinode (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode);
+int writeNode(ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode);
 
-int do_killfilebyinode (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode);
+int changeFileInode(ext2_filsys e2fs, ext2_ino_t ext2Ino, struct ext2_inode *inode);
 
 /* read support */
 
-int op_access (const char *path, int mask);
+int check_access(const char *path, int mask);
 
 int supFS_getattr (const char *path, struct stat *stbuf);
 
 ext2_file_t process_open (ext2_filsys e2fs, const char *path, int flags);
 
-int supFS_open (const char *path, struct fuse_file_info *fi);
+int supFS_open(const char *path, struct fuse_file_info *fi);
 
 int op_read (const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 
@@ -114,9 +112,9 @@ int op_release (const char *path, struct fuse_file_info *fi);
 
 /* write support */
 
-int do_modetoext2lag (mode_t mode);
+int modeToExt2Flag(mode_t mode);
 
-int do_create (ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const char *fastsymlink);
+int supFS_create(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const char *fastsymlink);
 
 int op_create (const char *path, mode_t mode, struct fuse_file_info *fi);
 
