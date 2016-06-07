@@ -35,30 +35,30 @@ int check(const char *path)
 
 int checkToDir(const char *path, char **dirname, char **basename)
 {
-	char *tmp;
-	char *cpath = strdup(path);
-	tmp = strrchr(cpath, '/');
-	if (tmp == NULL) {
-		free(cpath);
+	char *tmpPath;
+	char *cpPath = strdup(path);
+	tmpPath = strrchr(cpPath, '/');
+	if (tmpPath == NULL) {
+		free(cpPath);
 		return -ENOENT;
 	}
-	*tmp='\0';
-	tmp++;
-	if (strlen(tmp) > 255) {
-		free(cpath);
+	*tmpPath='\0';
+	tmpPath++;
+	if (strlen(tmpPath) > 255) {
+		free(cpPath);
 		return -ENAMETOOLONG;
 	}
-	*dirname = cpath;
-	*basename = tmp;
+	*dirname = cpPath;
+	*basename = tmpPath;
 	return 0;
 }
 
-void fillstatbuffer(ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode, struct stat *statBuff)
+void fillstatbuffer(ext2_filsys e2fs, ext2_ino_t ext2Ino, struct ext2_inode *inode, struct stat *statBuff)
 {
 	memset(statBuff, 0, sizeof(*statBuff));
 
 	statBuff->st_dev = (dev_t) e2fs;
-	statBuff->st_ino = ino;
+	statBuff->st_ino = ext2Ino;
 	statBuff->st_mode = inode->i_mode;
 	statBuff->st_nlink = inode->i_links_count;
 	statBuff->st_uid = inode->i_uid;
@@ -81,34 +81,24 @@ static int release_blocks_proc (ext2_filsys fs, blk_t *blocknr, int blockcnt, vo
 	return 0;
 }
 
-int do_killfilebyinode (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode)
+int changeFileInode(ext2_filsys e2fs, ext2_ino_t ext2Ino, struct ext2_inode *inode)
 {
 	errcode_t rc;
 	char scratchbuf[3*e2fs->blocksize];
 
-	debugf("enter");
-
 	inode->i_links_count = 0;
 	inode->i_dtime = time(NULL);
 
-	rc = ext2fs_write_inode(e2fs, ino, inode);
+	rc = ext2fs_write_inode(e2fs, ext2Ino, inode);
 	if (rc) {
-		debugf("ext2fs_write_inode(e2fs, ino, inode); failed");
-		return -EIO;
+		return -1;
 	}
 
 	if (ext2fs_inode_has_valid_blocks(inode)) {
-		debugf("start block delete for %d", ino);
-#ifdef CLEAN_UNUSED_BLOCKS
-		ext2fs_block_iterate(e2fs, ino, BLOCK_FLAG_DEPTH_TRAVERSE, scratchbuf, release_blocks_proc, NULL);
-#else
-		ext2fs_block_iterate(e2fs, ino, 0, scratchbuf, release_blocks_proc, NULL);
-#endif
+		ext2fs_block_iterate(e2fs, ext2Ino, 0, scratchbuf, release_blocks_proc, NULL);
 	}
+	ext2fs_inode_alloc_stats2(e2fs, ext2Ino, -1, LINUX_S_ISDIR(inode->i_mode));
 
-	ext2fs_inode_alloc_stats2(e2fs, ino, -1, LINUX_S_ISDIR(inode->i_mode));
-
-	debugf("leave");
 	return 0;
 }
 
@@ -139,9 +129,9 @@ int do_writeinode (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode)
 	int rt;
 	errcode_t rc;
 	if (inode->i_links_count < 1) {
-		rt = do_killfilebyinode(e2fs, ino, inode);
+		rt = changeFileInode(e2fs, ino, inode);
 		if (rt) {
-			debugf("do_killfilebyinode(e2fs, ino, inode); failed");
+			debugf("changeFileInode(e2fs, ino, inode); failed");
 			return rt;
 		}
 	} else {
@@ -1137,9 +1127,9 @@ int op_rmdir (const char *path)
 		return -EIO;
 	}
 
-	rt = do_killfilebyinode(e2fs, r_ino, &r_inode);
+	rt = changeFileInode(e2fs, r_ino, &r_inode);
 	if (rt) {
-		debugf("do_killfilebyinode(r_ino, &r_inode); failed");
+		debugf("changeFileInode(r_ino, &r_inode); failed");
         free(p_path);
 		return rt;
 	}
