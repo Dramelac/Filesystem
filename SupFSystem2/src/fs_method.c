@@ -435,28 +435,6 @@ int supFS_getattr (const char *path, struct stat *stbuf)
 	return 0;
 }
 
-static int parse_name(const char *name, int *name_index, char **attr_name) {
-	char namespace[16];
-	char *attr_name_str;
-
-	memcpy(namespace, name, sizeof namespace);
-
-	attr_name_str = strchr(namespace, '.');
-	if (!attr_name) {
-		return -ENOTSUP;
-	} else {
-		*attr_name_str = 0;
-		*attr_name = ++attr_name_str;
-	}
-
-	if (!strcmp(namespace, "user")) {
-		*name_index = 1;
-		return 0;
-	}
-
-	return -ENOTSUP;
-}
-
 
 void * op_init (struct fuse_conn_info *conn)
 {
@@ -1191,50 +1169,6 @@ int op_rmdir (const char *path)
 	debugf("leave");
 	return 0;
 }
-
-
-static int test_root (unsigned int a, unsigned int b)
-{
-	while (1) {
-		if (a < b) {
-			return 0;
-		}
-		if (a == b) {
-			return 1;
-		}
-		if (a % b) {
-			return 0;
-		}
-		a = a / b;
-	}
-}
-
-static int ext2_group_spare (int group)
-{
-	if (group <= 1) {
-		return 1;
-	}
-	return (test_root(group, 3) || test_root(group, 5) || test_root(group, 7));
-}
-
-static int ext2_bg_has_super (ext2_filsys e2fs, int group)
-{
-	if (EXT2_HAS_RO_COMPAT_FEATURE(e2fs->super, EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER) &&
-	    !ext2_group_spare(group)) {
-		return 0;
-	}
-	return 1;
-}
-
-static int ext2_bg_num_gdb (ext2_filsys e2fs, int group)
-{
-	if (EXT2_HAS_RO_COMPAT_FEATURE(e2fs->super, EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER) &&
-	    !ext2_group_spare(group)) {
-		return 0;
-	}
-	return 1;
-}
-
 
 int op_truncate (const char *path, off_t length)
 {
