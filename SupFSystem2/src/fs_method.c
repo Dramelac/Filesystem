@@ -1,5 +1,34 @@
 #include "main.h"
 
+ext2_filsys static current_ext2fs(void) {
+    struct fuse_context *mycontext=fuse_get_context();
+    struct supFs_data *e2data=mycontext->private_data;
+    time_t now=time(NULL);
+    if ((now - e2data->last_flush) > FLUSH_BITMAPS_TIMEOUT) {
+        ext2fs_write_bitmaps(e2data->e2fs);
+        e2data->last_flush=now;
+    }
+    return (ext2_filsys) e2data->e2fs;
+}
+
+uid_t static inline ext2_read_uid(struct ext2_inode *inode) {
+    return ((uid_t)inode->osd2.linux2.l_i_uid_high << 16) | inode->i_uid;
+}
+
+void static inline ext2_write_uid(struct ext2_inode *inode, uid_t uid) {
+    inode->i_uid = uid & 0xffff;
+    inode->osd2.linux2.l_i_uid_high = (uid >> 16) & 0xffff;
+}
+
+gid_t static ext2_read_gid(struct ext2_inode *inode) {
+    return ((gid_t)inode->osd2.linux2.l_i_gid_high << 16) | inode->i_gid;
+}
+
+void static ext2_write_gid(struct ext2_inode *inode, gid_t gid) {
+    inode->i_gid = gid & 0xffff;
+    inode->osd2.linux2.l_i_gid_high = (gid >> 16) & 0xffff;
+}
+
 int do_check (const char *path)
 {
 	char *basename_path;
@@ -577,7 +606,7 @@ int op_mkdir (const char *path, mode_t mode)
 		return rt;
 	}
 
-	debugf("parent: %s, child: %s, pathmax: %d", p_path, r_path);
+	debugf("parent: %s, child: %s", p_path, r_path);
 
 	rt = do_readinode(e2fs, p_path, &ino, &inode);
 	if (rt) {

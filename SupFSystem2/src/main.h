@@ -34,39 +34,15 @@ struct supFs_data {
     ext2_filsys e2fs;
 };
 
-static inline ext2_filsys current_ext2fs(void)
-{
-    struct fuse_context *mycontext=fuse_get_context();
-    struct supFs_data *e2data=mycontext->private_data;
-    time_t now=time(NULL);
-    if ((now - e2data->last_flush) > FLUSH_BITMAPS_TIMEOUT) {
-        ext2fs_write_bitmaps(e2data->e2fs);
-        e2data->last_flush=now;
-    }
-    return (ext2_filsys) e2data->e2fs;
-}
+static ext2_filsys current_ext2fs();
 
-static inline uid_t ext2_read_uid(struct ext2_inode *inode)
-{
-    return ((uid_t)inode->osd2.linux2.l_i_uid_high << 16) | inode->i_uid;
-}
+static uid_t ext2_read_uid(struct ext2_inode *inode);
 
-static inline void ext2_write_uid(struct ext2_inode *inode, uid_t uid)
-{
-    inode->i_uid = uid & 0xffff;
-    inode->osd2.linux2.l_i_uid_high = (uid >> 16) & 0xffff;
-}
+static inline void ext2_write_uid(struct ext2_inode *inode, uid_t uid);
 
-static inline gid_t ext2_read_gid(struct ext2_inode *inode)
-{
-    return ((gid_t)inode->osd2.linux2.l_i_gid_high << 16) | inode->i_gid;
-}
+gid_t static ext2_read_gid(struct ext2_inode *inode);
 
-static inline void ext2_write_gid(struct ext2_inode *inode, gid_t gid)
-{
-    inode->i_gid = gid & 0xffff;
-    inode->osd2.linux2.l_i_gid_high = (gid >> 16) & 0xffff;
-}
+static void ext2_write_gid(struct ext2_inode *inode, gid_t gid);
 
 #if ENABLE_DEBUG
 
