@@ -41,7 +41,7 @@ static struct fuse_operations fuseStruct_callback = {
         .releasedir     = op_release,
         .init		= op_init,
         .destroy	= op_destroy,
-        .access         = op_access,
+        .access         = check_access,
         .create         = op_create,
 };
 

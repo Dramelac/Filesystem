@@ -156,7 +156,7 @@ int check_access(const char *path, int mask)
 }
 
 
-int do_modetoext2lag (mode_t mode)
+int modeToExt2Flag(mode_t mode)
 {
 	if (S_ISREG(mode)) {
 		return EXT2_FT_REG_FILE;
@@ -176,24 +176,7 @@ int do_modetoext2lag (mode_t mode)
 	return EXT2_FT_UNKNOWN;
 }
 
-static inline int old_valid_dev(dev_t dev)
-{
-	return major(dev) < 256 && minor(dev) < 256;
-}
-
-static inline __u16 old_encode_dev(dev_t dev)
-{
-	return (major(dev) << 8) | minor(dev);
-}
-
-static inline __u32 new_encode_dev(dev_t dev)
-{
-	unsigned major = major(dev);
-	unsigned minor = minor(dev);
-	return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
-}
-
-int do_create (ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const char *fastsymlink)
+int supFS_create(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const char *fastsymlink)
 {
 	int rt;
 	time_t tm;
@@ -208,47 +191,32 @@ int do_create (ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 
 	struct fuse_context *ctx;
 
-	debugf("enter");
-	debugf("path = %s, mode: 0%o", path, mode);
-
-	rt= checkToDir(path, &p_path, &r_path);
-
-	debugf("parent: %s, child: %s", p_path, r_path);
-
+	checkToDir(path, &p_path, &r_path);
 	rt = readNode(e2fs, p_path, &ino, &inode);
+
 	if (rt) {
-		debugf("do_readinode(%s, &ino, &inode); failed", p_path);
         free(p_path);
 		return rt;
 	}
 
 	rc = ext2fs_new_inode(e2fs, ino, mode, 0, &n_ino);
 	if (rc) {
-		debugf("ext2fs_new_inode(ep.fs, ino, mode, 0, &n_ino); failed");
         free(p_path);
 		return -ENOMEM;
 	}
 
 	do {
-		debugf("calling ext2fs_link(e2fs, %d, %s, %d, %d);", ino, r_path, n_ino, do_modetoext2lag(mode));
-		rc = ext2fs_link(e2fs, ino, r_path, n_ino, do_modetoext2lag(mode));
-		if (rc == EXT2_ET_DIR_NO_SPACE) {
-			debugf("calling ext2fs_expand_dir(e2fs, &d)", ino);
-			if (ext2fs_expand_dir(e2fs, ino)) {
-				debugf("error while expanding directory %s (%d)", p_path, ino);
-                free(p_path);
-				return -ENOSPC;
-			}
+		rc = ext2fs_link(e2fs, ino, r_path, n_ino, modeToExt2Flag(mode));
+		if (rc == EXT2_ET_DIR_NO_SPACE && ext2fs_expand_dir(e2fs, ino)) {
+            free(p_path);
+            return -ENOSPC;
+
 		}
 	} while (rc == EXT2_ET_DIR_NO_SPACE);
+
 	if (rc) {
-		debugf("ext2fs_link(e2fs, %d, %s, %d, %d); failed", ino, r_path, n_ino, do_modetoext2lag(mode));
         free(p_path);
 		return -EIO;
-	}
-
-	if (ext2fs_test_inode_bitmap(e2fs->inode_map, n_ino)) {
-		debugf("inode already set");
 	}
 
 	ext2fs_inode_alloc_stats2(e2fs, n_ino, +1, 0);
@@ -278,13 +246,6 @@ int do_create (ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 		inode.i_flags |= EXT4_EXTENTS_FL;
 	}
 
-	if (S_ISCHR(mode) || S_ISBLK(mode)) {
-		if (old_valid_dev(dev))
-			inode.i_block[0]= ext2fs_cpu_to_le32(old_encode_dev(dev));
-		else
-			inode.i_block[1]= ext2fs_cpu_to_le32(new_encode_dev(dev));
-	}
-
 	if (S_ISLNK(mode) && fastsymlink != NULL) {
 		inode.i_size = strlen(fastsymlink);
 		strncpy((char *)&(inode.i_block[0]),fastsymlink,
@@ -293,7 +254,6 @@ int do_create (ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 
 	rc = ext2fs_write_new_inode(e2fs, n_ino, &inode);
 	if (rc) {
-		debugf("ext2fs_write_new_inode(e2fs, n_ino, &inode);");
         free(p_path);
 		return -EIO;
 	}
@@ -301,21 +261,17 @@ int do_create (ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 	/* update parent dir */
 	rt = readNode(e2fs, p_path, &ino, &inode);
 	if (rt) {
-		debugf("do_readinode(%s, &ino, &inode); dailed", p_path);
         free(p_path);
 		return -EIO;
 	}
 	inode.i_ctime = inode.i_mtime = tm;
 	rc = writeNode(e2fs, ino, &inode);
 	if (rc) {
-		debugf("writeNode(e2fs, ino, &inode); failed");
         free(p_path);
 		return -EIO;
 	}
 
     free(p_path);
-
-	debugf("leave");
 	return 0;
 }
 
@@ -332,7 +288,7 @@ int op_create (const char *path, mode_t mode, struct fuse_file_info *fi)
 		return 0;
 	}
 
-	rt = do_create(e2fs, path, mode, 0, NULL);
+	rt = supFS_create(e2fs, path, mode, 0, NULL);
 	if (rt != 0) {
 		return rt;
 	}
@@ -541,7 +497,7 @@ int op_mknod (const char *path, mode_t mode, dev_t dev)
 	debugf("enter");
 	debugf("path = %s 0%o", path, mode);
 
-	rt = do_create(e2fs, path, mode, dev, NULL);
+	rt = supFS_create(e2fs, path, mode, dev, NULL);
 
 	debugf("leave");
 	return rt;
@@ -934,8 +890,9 @@ int op_rename (const char *source, const char *dest)
   	
 	/* Step 2: add the link */
 	do {
-		debugf("calling ext2fs_link(e2fs, %d, %s, %d, %d);", d_dest_ino, r_dest, src_ino, do_modetoext2lag(src_inode.i_mode));
-		rc = ext2fs_link(e2fs, d_dest_ino, r_dest, src_ino, do_modetoext2lag(src_inode.i_mode));
+		debugf("calling ext2fs_link(e2fs, %d, %s, %d, %d);", d_dest_ino, r_dest, src_ino,
+               modeToExt2Flag(src_inode.i_mode));
+		rc = ext2fs_link(e2fs, d_dest_ino, r_dest, src_ino, modeToExt2Flag(src_inode.i_mode));
 		if (rc == EXT2_ET_DIR_NO_SPACE) {
 			debugf("calling ext2fs_expand_dir(e2fs, &d)", src_ino);
 			if (ext2fs_expand_dir(e2fs, d_dest_ino)) {
@@ -952,7 +909,8 @@ int op_rename (const char *source, const char *dest)
 		}
 	} while (rc == EXT2_ET_DIR_NO_SPACE);
 	if (rc != 0) {
-		debugf("ext2fs_link(e2fs, %d, %s, %d, %d); failed", d_dest_ino, r_dest, src_ino, do_modetoext2lag(src_inode.i_mode));
+		debugf("ext2fs_link(e2fs, %d, %s, %d, %d); failed", d_dest_ino, r_dest, src_ino,
+               modeToExt2Flag(src_inode.i_mode));
 		rt = -EIO;
 		goto out;
 	}

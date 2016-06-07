@@ -20,8 +20,6 @@
 
 /* extra definitions not yet included in ext2fs.h */
 #define EXT2_FILE_SHARED_INODE 0x8000
-errcode_t ext2fs_file_close2(ext2_file_t file, void (*close_callback) (struct ext2_inode *inode, int flags));
-
 
 #define EXT2FS_FILE(efile) ((void *) (unsigned long) (efile))
 
@@ -96,7 +94,7 @@ int changeFileInode(ext2_filsys e2fs, ext2_ino_t ext2Ino, struct ext2_inode *ino
 
 /* read support */
 
-int op_access (const char *path, int mask);
+int check_access(const char *path, int mask);
 
 int supFS_getattr (const char *path, struct stat *stbuf);
 
@@ -114,9 +112,9 @@ int op_release (const char *path, struct fuse_file_info *fi);
 
 /* write support */
 
-int do_modetoext2lag (mode_t mode);
+int modeToExt2Flag(mode_t mode);
 
-int do_create (ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const char *fastsymlink);
+int supFS_create(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const char *fastsymlink);
 
 int op_create (const char *path, mode_t mode, struct fuse_file_info *fi);
 
