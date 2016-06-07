@@ -100,9 +100,9 @@ int op_access (const char *path, int mask);
 
 int supFS_getattr (const char *path, struct stat *stbuf);
 
-ext2_file_t do_open (ext2_filsys e2fs, const char *path, int flags);
+ext2_file_t process_open (ext2_filsys e2fs, const char *path, int flags);
 
-int op_open (const char *path, struct fuse_file_info *fi);
+int supFS_open (const char *path, struct fuse_file_info *fi);
 
 int op_read (const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 
