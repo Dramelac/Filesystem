@@ -20,6 +20,7 @@ void static inline ext2_write_uid(struct ext2_inode *inode, uid_t uid) {
     inode->osd2.linux2.l_i_uid_high = (uid >> 16) & 0xffff;
 }
 
+
 gid_t static ext2_read_gid(struct ext2_inode *inode) {
     return ((gid_t)inode->osd2.linux2.l_i_gid_high << 16) | inode->i_gid;
 }
