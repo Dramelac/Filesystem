@@ -1,31 +1,13 @@
 #include "main.h"
 
-static const char *HOME = "http://github.com/alperakcan/fuse-ext2/";
-
-#if __FreeBSD__ == 10
-static char def_opts[] = "allow_other,default_permissions,local,";
-static char def_opts_rd[] = "noappledouble,";
-#else
 static char def_opts[] = "allow_other,default_permissions,";
 static char def_opts_rd[] = "";
-#endif
 
-static const char *usage_msg =
-        "\n"
-                "%s %s %d - FUSE EXT2FS Driver\n"
-                "\n"
-                "Copyright (C) 2008-2015 Alper Akcan <alper.akcan@gmail.com>\n"
-                "Copyright (C) 2009 Renzo Davoli <renzo@cs.unibo.it>\n"
-                "\n"
-                "Usage:    %s <device|image_file> <mount_point> [-o option[,...]]\n"
-                "\n"
-                "Options:  ro, force, allow_others\n"
-                "          Please see details in the manual.\n"
-                "\n"
-                "Example:  fuse-ext2 /dev/sda1 /mnt/sda1\n"
-                "\n"
-                "%s\n"
-                "\n";
+static void usage (void)
+{
+    printf("Usage: <device> <mount_point> [-o option[,...]]\n");
+}
+
 
 static int strappend (char **dest, const char *append)
 {
@@ -60,11 +42,6 @@ static int strappend (char **dest, const char *append)
     return 0;
 }
 
-static void usage (void)
-{
-    printf(usage_msg, PACKAGE, VERSION, fuse_version(), PACKAGE, HOME);
-}
-
 static int parse_options (int argc, char *argv[], struct supFs_data *opts)
 {
     int c;
@@ -76,14 +53,6 @@ static int parse_options (int argc, char *argv[], struct supFs_data *opts)
             { "verbose",	 no_argument,		NULL, 'v' },
             { NULL,		 0,			NULL,  0  }
     };
-
-#if 0
-    printf("arguments;\n");
-	for (c = 0; c < argc; c++) {
-		printf("%d: %s\n", c, argv[c]);
-	}
-	printf("done\n");
-#endif
 
     opterr = 0; /* We'll handle the errors, thank you. */
 
