@@ -1,33 +1,18 @@
 #include "main.h"
 
 ext2_filsys static current_ext2fs(void) {
-    struct fuse_context *mycontext=fuse_get_context();
-    struct supFs_data *e2data=mycontext->private_data;
-    time_t now=time(NULL);
-    if ((now - e2data->last_flush) > FLUSH_BITMAPS_TIMEOUT) {
-        ext2fs_write_bitmaps(e2data->e2fs);
-        e2data->last_flush=now;
+
+    struct fuse_context *fuseGetContext = fuse_get_context();
+    struct supFs_data *fsData = fuseGetContext->private_data;
+
+    time_t now = time(NULL);
+    /* check flush for redundancy */
+    if ((now - fsData->last_flush) > 10) {
+        ext2fs_write_bitmaps(fsData->e2fs);
+        fsData->last_flush=now;
     }
-    return (ext2_filsys) e2data->e2fs;
-}
 
-uid_t static inline ext2_read_uid(struct ext2_inode *inode) {
-    return ((uid_t)inode->osd2.linux2.l_i_uid_high << 16) | inode->i_uid;
-}
-
-void static inline ext2_write_uid(struct ext2_inode *inode, uid_t uid) {
-    inode->i_uid = uid & 0xffff;
-    inode->osd2.linux2.l_i_uid_high = (uid >> 16) & 0xffff;
-}
-
-
-gid_t static ext2_read_gid(struct ext2_inode *inode) {
-    return ((gid_t)inode->osd2.linux2.l_i_gid_high << 16) | inode->i_gid;
-}
-
-void static ext2_write_gid(struct ext2_inode *inode, gid_t gid) {
-    inode->i_gid = gid & 0xffff;
-    inode->osd2.linux2.l_i_gid_high = (gid >> 16) & 0xffff;
+    return fsData->e2fs;
 }
 
 int do_check (const char *path)
@@ -96,8 +81,8 @@ void do_fillstatbuf (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode,
 	st->st_ino = ino;
 	st->st_mode = inode->i_mode;
 	st->st_nlink = inode->i_links_count;
-	st->st_uid = ext2_read_uid(inode);
-	st->st_gid = ext2_read_gid(inode);
+	st->st_uid = inode->i_uid;
+	st->st_gid = inode->i_gid;
 	if (S_ISCHR(inode->i_mode) || S_ISBLK(inode->i_mode)) {
 		if (inode->i_block[0]) {
 			st->st_rdev = old_decode_dev(ext2fs_le32_to_cpu(inode->i_block[0]));
@@ -335,8 +320,8 @@ int do_create (ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 	inode.i_size = 0;
 	ctx = fuse_get_context();
 	if (ctx) {
-		ext2_write_uid(&inode, ctx->uid);
-		ext2_write_gid(&inode, ctx->gid);
+		inode.i_uid = ctx->uid;
+		inode.i_gid = ctx->gid;
 	}
 	if (e2fs->super->s_feature_incompat &
 	    EXT3_FEATURE_INCOMPAT_EXTENTS) {
@@ -646,8 +631,8 @@ int op_mkdir (const char *path, mode_t mode)
 	inode.i_ctime = inode.i_atime = inode.i_mtime = tm;
 	ctx = fuse_get_context();
 	if (ctx) {
-		ext2_write_uid(&inode, ctx->uid);
-		ext2_write_gid(&inode, ctx->gid);
+		inode.i_uid = ctx->uid;
+		inode.i_gid = ctx->gid;
 	}
 	rc = do_writeinode(e2fs, ino, &inode);
 	if (rc) {

@@ -24,8 +24,6 @@ errcode_t ext2fs_file_close2(ext2_file_t file, void (*close_callback) (struct ex
 
 
 #define EXT2FS_FILE(efile) ((void *) (unsigned long) (efile))
-/* max timeout to flush bitmaps, to reduce inconsistencies */
-#define FLUSH_BITMAPS_TIMEOUT 10
 
 struct supFs_data {
     time_t last_flush;
@@ -35,14 +33,6 @@ struct supFs_data {
 };
 
 static ext2_filsys current_ext2fs();
-
-static uid_t ext2_read_uid(struct ext2_inode *inode);
-
-static inline void ext2_write_uid(struct ext2_inode *inode, uid_t uid);
-
-gid_t static ext2_read_gid(struct ext2_inode *inode);
-
-static void ext2_write_gid(struct ext2_inode *inode, gid_t gid);
 
 #if ENABLE_DEBUG
 
