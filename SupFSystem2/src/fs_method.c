@@ -139,25 +139,19 @@ int writeNode(ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode)
 }
 
 
-int op_access (const char *path, int mask)
+int check_access(const char *path, int mask)
 {
 	int rt;
 	ext2_filsys e2fs = current_ext2fs();
-
-	debugf("enter");
-	debugf("path = %s, mask = 0%o", path, mask);
 	
 	rt = check(path);
 	if (rt != 0) {
-		debugf("check(%s); failed", path);
 		return rt;
 	}
 
 	if ((mask & W_OK) && !(e2fs->flags & EXT2_FLAG_RW)) {
 		return -EACCES;
 	}
-	
-	debugf("leave");
 	return 0;
 }
 
