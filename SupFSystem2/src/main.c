@@ -24,7 +24,7 @@ static int parse_options (int argc, char *argv[], struct supFs_data *opts)
 }
 
 static struct fuse_operations fuseStruct_callback = {
-        .getattr        = op_getattr,
+        .getattr        = supFS_getattr,
         .mknod          = op_mknod,
         .mkdir          = op_mkdir,
         .unlink         = op_unlink,
