@@ -18,16 +18,18 @@ ext2_filsys static current_ext2fs(void) {
 int do_check (const char *path)
 {
 	char *basename_path;
+    // shrink path
 	basename_path = strrchr(path, '/');
+    // check null error
 	if (basename_path == NULL) {
-		debugf("this should not happen %s", path);
 		return -ENOENT;
 	}
 	basename_path++;
+    // check size error
 	if (strlen(basename_path) > 255) {
-		debugf("basename exceeds 255 characters %s",path);
 		return -ENAMETOOLONG;
 	}
+    // check valid
 	return 0;
 }
 
@@ -37,14 +39,12 @@ int do_check_split (const char *path, char **dirname, char **basename)
 	char *cpath = strdup(path);
 	tmp = strrchr(cpath, '/');
 	if (tmp == NULL) {
-		debugf("this should not happen %s", path);
 		free(cpath);
 		return -ENOENT;
 	}
 	*tmp='\0';
 	tmp++;
 	if (strlen(tmp) > 255) {
-		debugf("basename exceeds 255 characters %s",path);
 		free(cpath);
 		return -ENAMETOOLONG;
 	}
