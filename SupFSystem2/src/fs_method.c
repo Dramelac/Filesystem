@@ -140,43 +140,6 @@ int do_killfilebyinode (ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *ino
 }
 
 
-#define VOLNAME_SIZE_MAX 16
-
-int do_probe (struct supFs_data *opts)
-{
-	errcode_t rc;
-	ext2_filsys e2fs;
-
-	debugf_main("enter");
-
-	rc = ext2fs_open(opts->device, EXT2_FLAG_RW, 0, 0, unix_io_manager, &e2fs);
-	if (rc) {
-		debugf_main("Error while trying to open %s (rc=%d)", opts->device, rc);
-		return -1;
-	}
-#if 0
-	rc = ext2fs_read_bitmaps(e2fs);
-	if (rc) {
-		debugf_main("Error while reading bitmaps (rc=%d)", rc);
-		ext2fs_close(e2fs);
-		return -2;
-	}
-#endif
-	if (e2fs->super != NULL) {
-		opts->volname = (char *) malloc(sizeof(char) * (VOLNAME_SIZE_MAX + 1));
-		if (opts->volname != NULL) {
-			memset(opts->volname, 0, sizeof(char) * (VOLNAME_SIZE_MAX + 1));
-			strncpy(opts->volname, e2fs->super->s_volume_name, VOLNAME_SIZE_MAX);
-			opts->volname[VOLNAME_SIZE_MAX] = '\0';
-		}
-	}
-	ext2fs_close(e2fs);
-
-	debugf_main("leave");
-	return 0;
-}
-
-
 int do_readinode (ext2_filsys e2fs, const char *path, ext2_ino_t *ino, struct ext2_inode *inode)
 {
 	errcode_t rc;
@@ -570,27 +533,20 @@ void * op_init (struct fuse_conn_info *conn)
 	struct fuse_context *cntx=fuse_get_context();
 	struct supFs_data *e2data=cntx->private_data;
 
-	debugf("enter %s", e2data->device);
-
-	rc = ext2fs_open(e2data->device, 
-			(e2data->readonly) ? 0 : EXT2_FLAG_RW,
-			0, 0, unix_io_manager, &e2data->e2fs);
+	rc = ext2fs_open(e2data->device, EXT2_FLAG_RW, 0, 0, unix_io_manager, &e2data->e2fs);
 	if (rc) {
-		debugf("Error while trying to open %s", e2data->device);
+		log_error("Error while trying to open device");
 		exit(1);
 	}
-#if 1
-	if (e2data->readonly != 1)
-#endif
+
 	rc = ext2fs_read_bitmaps(e2data->e2fs);
 	if (rc) {
-		debugf("Error while reading bitmaps");
+		log_error("Error while reading bitmaps");
 		ext2fs_close(e2data->e2fs);
 		exit(1);
 	}
-	debugf("FileSystem %s", (e2data->e2fs->flags & EXT2_FLAG_RW) ? "Read&Write" : "ReadOnly");
+	log_info("FileSystem ReadWrite");
 
-	debugf("leave");
 
 	return e2data;
 }
@@ -742,14 +698,6 @@ ext2_file_t do_open (ext2_filsys e2fs, const char *path, int flags)
 		return NULL;
 	}
 
-	if (e2data->readonly == 0) {
-		inode.i_atime = e2fs->now ? e2fs->now : time(NULL);
-		rt = do_writeinode(e2fs, ino, &inode);
-		if (rt) {
-			debugf("do_writeinode(%s, &ino, &inode); failed", path);
-			return NULL;
-		}
-	}
 
 	debugf("leave");
 	return efile;

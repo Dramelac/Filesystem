@@ -1,6 +1,8 @@
 #ifndef FUSEEXT2_H_
 #define FUSEEXT2_H_
 
+#define FUSE_USE_VERSION 27
+
 #include <../config.h>
 
 #include <stdio.h>
@@ -29,15 +31,10 @@ errcode_t ext2fs_file_close2(ext2_file_t file, void (*close_callback) (struct ex
 #define FLUSH_BITMAPS_TIMEOUT 10
 
 struct supFs_data {
-    unsigned char debug;
-    unsigned char silent;
-    unsigned char force;
-    unsigned char readonly;
     time_t last_flush;
     char *mnt_point;
     char *options;
     char *device;
-    char *volname;
     ext2_filsys e2fs;
 };
 
@@ -122,8 +119,6 @@ void * op_init (struct fuse_conn_info *conn);
 void op_destroy (void *userdata);
 
 /* helper functions */
-
-int do_probe (struct supFs_data *opts);
 
 int do_check (const char *path);
 
