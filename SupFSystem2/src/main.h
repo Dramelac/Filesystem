@@ -33,7 +33,6 @@ errcode_t ext2fs_file_close2(ext2_file_t file, void (*close_callback) (struct ex
 struct supFs_data {
     time_t last_flush;
     char *mnt_point;
-    char *options;
     char *device;
     ext2_filsys e2fs;
 };

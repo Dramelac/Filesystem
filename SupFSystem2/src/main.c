@@ -1,100 +1,15 @@
 #include "main.h"
 
-
-static void usage (void)
-{
-    printf("Usage: <device> <mount_point> [-o option[,...]]\n");
-}
-
-
-static int strappend (char **dest, const char *append)
-{
-    char *p;
-    size_t size;
-
-    if (!dest) {
-        return -1;
-    }
-    if (!append) {
-        return 0;
-    }
-
-    size = strlen(append) + 1;
-    if (*dest) {
-        size += strlen(*dest);
-    }
-
-    p = realloc(*dest, size);
-    if (!p) {
-        debugf_main("Memory realloction failed");
-        return -1;
-    }
-
-    if (*dest) {
-        strcat(p, append);
-    } else {
-        strcpy(p, append);
-    }
-    *dest = p;
-
-    return 0;
-}
-
 static int parse_options (int argc, char *argv[], struct supFs_data *opts)
 {
-    int c;
 
-    static const char *sopt = "o:hv";
-    static const struct option lopt[] = {
-            { "options",	 required_argument,	NULL, 'o' },
-            { "help",	 no_argument,		NULL, 'h' },
-            { "verbose",	 no_argument,		NULL, 'v' },
-            { NULL,		 0,			NULL,  0  }
-    };
-
-    opterr = 0; /* We'll handle the errors, thank you. */
-
-    while ((c = getopt_long(argc, argv, sopt, lopt, NULL)) != -1) {
-        switch (c) {
-            case 'o':
-                if (opts->options)
-                if (strappend(&opts->options, ","))
-                    return -1;
-                if (strappend(&opts->options, optarg))
-                    return -1;
-                break;
-            case 'h':
-                usage();
-                exit(9);
-            default:
-                log_error("Unknown options");
-                return -1;
-        }
-    }
-
-    if (optind < argc) {
-        optarg=argv[optind++];
-        if (optarg[0] != '/') {
-            char fulldevice[PATH_MAX+1];
-            if (!realpath(optarg, fulldevice)) {
-                log_error("Cannot mount device");
-                free(opts->device);
-                opts->device = NULL;
-                return -1;
-            } else
-                opts->device = strdup(fulldevice);
-        } else
-            opts->device = strdup(optarg);
-    }
-
-    if (optind < argc) {
-        opts->mnt_point = argv[optind++];
-    }
-
-    if (optind < argc) {
+    if (argc != 3) {
         log_error("error arg number, please specify device and mount point");
         return -1;
     }
+
+    opts->device = argv[1];
+    opts->mnt_point = argv[2];
 
     if (!opts->device) {
         log_error("error device");
@@ -144,7 +59,7 @@ int main (int argc, char *argv[])
 
     // check and load option in dataStruct
     if (parse_options(argc, argv, &dataOptionsStruct)) {
-        usage();
+        printf("Usage: <device> <mount_point> [-o option[,...]]\n");
         return -1;
     }
 
@@ -155,8 +70,6 @@ int main (int argc, char *argv[])
     snprintf(msg, sizeof(msg), "dataOptionsStruct.device: %s", dataOptionsStruct.device);
     log_info(msg);
     snprintf(msg, sizeof(msg), "dataOptionsStruct.mnt_point: %s", dataOptionsStruct.mnt_point);
-    log_info(msg);
-    snprintf(msg, sizeof(msg), "dataOptionsStruct.options: %s", dataOptionsStruct.options);
     log_info(msg);
     snprintf(msg, sizeof(msg), "parsed_options: %s", parsed_options);
     log_info(msg);
@@ -171,7 +84,5 @@ int main (int argc, char *argv[])
     log_info("Exit fuse FS");
 
     fuse_opt_free_args(&fargs);
-    free(dataOptionsStruct.options);
-    free(dataOptionsStruct.device);
     return returnValue;
 }
