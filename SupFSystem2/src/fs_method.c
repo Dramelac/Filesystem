@@ -600,20 +600,17 @@ ext2_file_t do_open (ext2_filsys e2fs, const char *path, int flags)
 	return efile;
 }
 
-int op_open (const char *path, struct fuse_file_info *fi)
+int supFS_open (const char *path, struct fuse_file_info *fi)
 {
-	ext2_file_t efile;
+	ext2_file_t file;
 	ext2_filsys e2fs = current_ext2fs();
 
-	debugf("enter");
-	debugf("path = %s", path);
-
-	efile = do_open(e2fs, path, fi->flags);
-	if (efile == NULL) {
+	file = do_open(e2fs, path, fi->flags);
+	if (file == NULL) {
 		debugf("do_open(%s); failed", path);
 		return -ENOENT;
 	}
-	fi->fh = (uint64_t) efile;
+	fi->fh = (uint64_t) file;
 
 	debugf("leave");
 	return 0;
