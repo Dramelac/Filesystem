@@ -136,6 +136,8 @@ int supFS_mknod(const char *path, mode_t mode, dev_t dev);
 
 int op_truncate(const char *path, off_t length);
 
-int op_rename (const char *source, const char *dest);
+int supFS_rename(const char *actual_path, const char *objectif_path);
+
+static int fixHeritage(ext2_filsys ext2fs, ext2_ino_t ext2Ino, ext2_ino_t dotdot);
 
 #endif /* FUSEEXT2_H_ */

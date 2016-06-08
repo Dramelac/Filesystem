@@ -669,211 +669,170 @@ static int fix_dotdot_proc (ext2_ino_t dir EXT2FS_ATTR((unused)),
 	}
 }
 
-static int do_fix_dotdot (ext2_filsys e2fs, ext2_ino_t ino, ext2_ino_t dotdot)
+static int fixHeritage(ext2_filsys ext2fs, ext2_ino_t ext2Ino, ext2_ino_t dotdot)
 {
-	errcode_t rc;
-
-	debugf("enter");
-	rc = ext2fs_dir_iterate2(e2fs, ino, DIRENT_FLAG_INCLUDE_EMPTY, 
-			0, fix_dotdot_proc, &dotdot);
-	if (rc) {
-		debugf("while iterating over directory");
+	if (ext2fs_dir_iterate2(ext2fs, ext2Ino, DIRENT_FLAG_INCLUDE_EMPTY, 0, fix_dotdot_proc, &dotdot)) {
 		return -EIO;
 	}
-	debugf("leave");
 	return 0;
 }
 
-int op_rename (const char *source, const char *dest)
+int supFS_rename(const char *actual_path, const char *objectif_path)
 {
 	int returnValue;
-	errcode_t rc;
+	errcode_t errcode;
 
-	char *p_src;
-	char *r_src;
-	char *p_dest;
-	char *r_dest;
+	char *parent_source;
+	char *child_source;
+	char *parent_destinataire;
+	char *child_destinataire;
 
-	ext2_ino_t src_ino;
-	ext2_ino_t dest_ino;
-	ext2_ino_t d_src_ino;
-	ext2_ino_t d_dest_ino;
-	struct ext2_inode src_inode;
-	struct ext2_inode dest_inode;
-	struct ext2_inode d_src_inode;
-	struct ext2_inode d_dest_inode;
-	ext2_filsys e2fs = getCurrent_e2fs();
+	ext2_ino_t parent_source_ino;
+	ext2_ino_t parent_destinataire_ino;
+	ext2_ino_t child_source_ino;
+	ext2_ino_t child_destinataire_ino;
 
-	debugf("source: %s, dest: %s", source, dest);
+	struct ext2_inode parent_source_inode;
+	struct ext2_inode parent_destinataire_inode;
+	struct ext2_inode child_source_inode;
+	struct ext2_inode child_destinataire_inode;
 
-	returnValue = checkToDir(source, &p_src, &r_src);
+	ext2_filsys ext2fs = getCurrent_e2fs();
+
+
+	returnValue = checkToDir(actual_path, &parent_source, &child_source);
 	if (returnValue != 0) {
-		debugf("check(%s); failed", source);
+		log_error("check() FAILED");
 		return returnValue;
 	}
 
-	debugf("src_parent: %s, src_child: %s", p_src, r_src);
-
-	returnValue = checkToDir(dest, &p_dest, &r_dest);
+	returnValue = checkToDir(objectif_path, &parent_destinataire, &child_destinataire);
 	if (returnValue != 0) {
-		debugf("check(%s); failed", dest);
+        log_error("check() FAILED");
 		return returnValue;
 	}
 
-	debugf("dest_parent: %s, dest_child: %s", p_dest, r_dest);
-
-	returnValue = readNode(e2fs, p_src, &d_src_ino, &d_src_inode);
+	returnValue = readNode(ext2fs, parent_source, &child_source_ino, &child_source_inode);
 	if (returnValue != 0) {
-		debugf("readNode(%s, &d_src_ino, &d_src_inode); failed", p_src);
-		goto out;
+        log_error("readNode() FAILED");
+        return returnValue;
 	}
 
-	returnValue = readNode(e2fs, p_dest, &d_dest_ino, &d_dest_inode);
+	returnValue = readNode(ext2fs, parent_destinataire, &child_destinataire_ino, &child_destinataire_inode);
 	if (returnValue != 0) {
-		debugf("readNode(%s, &d_dest_ino, &d_dest_inode); failed", p_dest);
-		goto out;
+        log_error("readNode() FAILED");
+        return returnValue;
 	}
 
-	returnValue = readNode(e2fs, source, &src_ino, &src_inode);
+	returnValue = readNode(ext2fs, actual_path, &parent_source_ino, &parent_source_inode);
 	if (returnValue != 0) {
-		debugf("readNode(%s, &src_ino, &src_inode); failed", p_dest);
-		goto out;
+        log_error("readNode() FAILED");
+        return returnValue;
 	}
 
-	returnValue = readNode(e2fs, dest, &dest_ino, &dest_inode);
+	returnValue = readNode(ext2fs, objectif_path, &parent_destinataire_ino, &parent_destinataire_inode);
 	if (returnValue != 0 && returnValue != -ENOENT) {
-		debugf("readNode(%s, &dest_ino, &dest_inode); failed", dest);
-		goto out;
+        log_error("readNode() FAILED");
+        return returnValue;
 	}
 
-	/* If oldpath  and  newpath are existing hard links referring to the same
-	 * file, then rename() does nothing, and returns a success status.
-	 */
-	if (returnValue == 0 && src_ino == dest_ino) {
-		goto out;
+    // Check oldpath and newpath if are not null , return a succes statut
+	if (returnValue == 0 && parent_source_ino == parent_destinataire_ino) {
+        return returnValue;
 	}
 
-	/* EINVAL:
-	 *   The  new  pathname  contained a path prefix of the old, this should be checked by fuse
-	 */
+    // the objectif_path have a old's prefix path , for let fuse check this
+
 	if (returnValue == 0) {
-		if (LINUX_S_ISDIR(dest_inode.i_mode)) {
-			/* EISDIR:
-			 *   newpath  is  an  existing directory, but oldpath is not a directory.
-			 */
-			if (!(LINUX_S_ISDIR(src_inode.i_mode))) {
-				debugf("newpath is dir && oldpath is not a dir -> EISDIR");
-				returnValue = -EISDIR;
-				goto out;
+		if (LINUX_S_ISDIR(parent_destinataire_inode.i_mode)) {
+
+			if (!(LINUX_S_ISDIR(parent_source_inode.i_mode))) {
+				return -EISDIR;
+
 			}
-			/* ENOTEMPTY:
-			 *   newpath is a non-empty  directory
-			 */
-			returnValue = checkDirIsEmpty(e2fs, dest_ino);
+			// check if the objectif_path if not empty
+			returnValue = checkDirIsEmpty(ext2fs, parent_destinataire_ino);
 			if (returnValue != 0) {
-				debugf("checkDirIsEmpty dest %s failed",dest);
-				goto out;
+                return returnValue;
 			}
 		}
-		/* ENOTDIR:
-		 *   oldpath  is a directory, and newpath exists but is not a directory
-		 */
-		if (LINUX_S_ISDIR(src_inode.i_mode) &&
-		    !(LINUX_S_ISDIR(dest_inode.i_mode))) {
-			debugf("oldpath is dir && newpath is not a dir -> ENOTDIR");
-			returnValue = -ENOTDIR;
-			goto out;
+		// actual_path is a directory and the objectif_path are not
+		if (LINUX_S_ISDIR(parent_source_inode.i_mode) &&
+		    !(LINUX_S_ISDIR(parent_destinataire_inode.i_mode))) {
+			return -ENOTDIR;
 		}
 
-		/* Step 1: if destination exists: delete it */
-		if (LINUX_S_ISDIR(dest_inode.i_mode)) {
-			rc = op_rmdir(dest);
+		// At first if actual-destinataire exist delete him
+		if (LINUX_S_ISDIR(parent_destinataire_inode.i_mode)) {
+			errcode = op_rmdir(objectif_path);
 		} else {
-			rc = op_unlink(dest);
+			errcode = op_unlink(objectif_path);
 		}
-		if (rc) {
-			goto out;
+		if (errcode) {
+			return returnValue;
 		}
-		returnValue = readNode(e2fs, p_dest, &d_dest_ino, &d_dest_inode);
+		returnValue = readNode(ext2fs, parent_destinataire, &child_destinataire_ino, &child_destinataire_inode);
 		if (returnValue != 0) {
-			debugf("readNode(%s, &d_dest_ino, &d_dest_inode); failed", p_dest);
-			goto out;
+			log_error("readNode() FAILED");
+            return returnValue;
 		}
 	}
   	
-	/* Step 2: add the link */
+	// Second time create a new link
 	do {
-		debugf("calling ext2fs_link(e2fs, %d, %s, %d, %d);", d_dest_ino, r_dest, src_ino,
-               modeToExt2Flag(src_inode.i_mode));
-		rc = ext2fs_link(e2fs, d_dest_ino, r_dest, src_ino, modeToExt2Flag(src_inode.i_mode));
-		if (rc == EXT2_ET_DIR_NO_SPACE) {
-			debugf("calling ext2fs_expand_dir(e2fs, &d)", src_ino);
-			if (ext2fs_expand_dir(e2fs, d_dest_ino)) {
-				debugf("error while expanding directory %s (%d)", p_dest, d_dest_ino);
-				returnValue = -ENOSPC;
-				goto out;
+		errcode = ext2fs_link(ext2fs, child_destinataire_ino, child_destinataire, parent_source_ino, modeToExt2Flag(parent_source_inode.i_mode));
+		if (errcode == EXT2_ET_DIR_NO_SPACE) {
+			if (ext2fs_expand_dir(ext2fs, child_destinataire_ino)) {
+                return -ENOSPC;
 			}
-			/* ext2fs_expand_dir changes d_dest_inode */
-			returnValue = readNode(e2fs, p_dest, &d_dest_ino, &d_dest_inode);
+			returnValue = readNode(ext2fs, parent_destinataire, &child_destinataire_ino, &child_destinataire_inode);
 			if (returnValue != 0) {
-				debugf("readNode(%s, &d_dest_ino, &d_dest_inode); failed", p_dest);
-				goto out;
+                log_error("readNode() FAILED");
+                return returnValue;
 			}
 		}
-	} while (rc == EXT2_ET_DIR_NO_SPACE);
-	if (rc != 0) {
-		debugf("ext2fs_link(e2fs, %d, %s, %d, %d); failed", d_dest_ino, r_dest, src_ino,
-               modeToExt2Flag(src_inode.i_mode));
-		returnValue = -EIO;
-		goto out;
+	} while (errcode == EXT2_ET_DIR_NO_SPACE);
+	if (errcode != 0) {
+		return -EIO;
 	}
 
-	/* Special case: if moving dir across different parents fix counters and '..' */
-	if (LINUX_S_ISDIR(src_inode.i_mode) && d_src_ino != d_dest_ino) {
-		d_dest_inode.i_links_count++;
-		if (d_src_inode.i_links_count > 1) {
-			d_src_inode.i_links_count--;
+	// Optional if you move a dir get a parametre their parents and son ../ /*
+	if (LINUX_S_ISDIR(parent_source_inode.i_mode) && child_source_ino != child_destinataire_ino) {
+		child_destinataire_inode.i_links_count++;
+		if (child_source_inode.i_links_count > 1) {
+			child_source_inode.i_links_count--;
 		}
-		rc = writeNode(e2fs, d_src_ino, &d_src_inode);
-		if (rc != 0) {
-			debugf("writeNode(e2fs, src_ino, &src_inode); failed");
-			returnValue = -EIO;
-			goto out;
+		errcode = writeNode(ext2fs, child_source_ino, &child_source_inode);
+		if (errcode != 0) {
+			log_error("writeNode() FAILED");
+			return -EIO;
 		}
-		returnValue = do_fix_dotdot(e2fs, src_ino, d_dest_ino);
+		returnValue = fixHeritage(ext2fs, parent_source_ino, child_destinataire_ino);
 		if (returnValue != 0) {
-			debugf("do_fix_dotdot failed");
-			goto out;
+            log_error("fixHeritage() FAILED");
+            return returnValue;
 		}
 	}
 
-	/* utimes and inodes update */
-	d_dest_inode.i_mtime = d_dest_inode.i_ctime = src_inode.i_ctime = e2fs->now ? e2fs->now : time(NULL);
-	returnValue = writeNode(e2fs, d_dest_ino, &d_dest_inode);
+	//Update utime and unode
+	child_destinataire_inode.i_mtime = child_destinataire_inode.i_ctime = parent_source_inode.i_ctime = ext2fs->now ? ext2fs->now : time(NULL);
+	returnValue = writeNode(ext2fs, child_destinataire_ino, &child_destinataire_inode);
 	if (returnValue != 0) {
-		debugf("writeNode(e2fs, d_dest_ino, &d_dest_inode); failed");
-		goto out;
+        log_error("writeNode() FAILED");
+        return returnValue;
 	}
-	returnValue = writeNode(e2fs, src_ino, &src_inode);
+	returnValue = writeNode(ext2fs, parent_source_ino, &parent_source_inode);
 	if (returnValue != 0) {
-		debugf("writeNode(e2fs, src_ino, &src_inode); failed");
-		goto out;
+        log_error("writeNode() FAILED");
+        return returnValue;
 	}
-	debugf("done");
 
 	/* Step 3: delete the source */
 
-	rc = ext2fs_unlink(e2fs, d_src_ino, r_src, src_ino, 0);
-	if (rc) {
-		debugf("while unlinking src ext2Ino %d", (int) src_ino);
-		returnValue = -EIO;
-		goto out;
+	errcode = ext2fs_unlink(ext2fs, child_source_ino, child_source, parent_source_ino, 0);
+	if (errcode) {
+		return -EIO;
 	}
-
-out:
-    free(p_src);
-    free(p_dest);
-	return returnValue;
 }
 
 static int rmdir_proc (ext2_ino_t dir EXT2FS_ATTR((unused)),
