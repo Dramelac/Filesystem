@@ -83,22 +83,19 @@ static int release_blocks_proc (ext2_filsys fs, blk_t *blocknr, int blockcnt, vo
 
 int changeFileInode(ext2_filsys e2fs, ext2_ino_t ext2Ino, struct ext2_inode *inode)
 {
-	errcode_t rc;
-	char scratchbuf[3*e2fs->blocksize];
+	errcode_t errorCode;
+	char blockBuffer[3*e2fs->blocksize];
 
 	inode->i_links_count = 0;
 	inode->i_dtime = time(NULL);
 
-	rc = ext2fs_write_inode(e2fs, ext2Ino, inode);
-	if (rc) {
-
-		debugf("ext2fs_write_inode(e2fs, ext2Ino, ext2Inode); failed");
-		return -EIO;
-
+	errorCode = ext2fs_write_inode(e2fs, ext2Ino, inode);
+	if (errorCode) {
+        return -EIO;
 	}
 
 	if (ext2fs_inode_has_valid_blocks(inode)) {
-		ext2fs_block_iterate(e2fs, ext2Ino, 0, scratchbuf, release_blocks_proc, NULL);
+		ext2fs_block_iterate(e2fs, ext2Ino, 0, blockBuffer, release_blocks_proc, NULL);
 	}
 	ext2fs_inode_alloc_stats2(e2fs, ext2Ino, -1, LINUX_S_ISDIR(inode->i_mode));
 
@@ -539,9 +536,8 @@ struct dir_walk_data {
 	fuse_fill_dir_t filler;
 };
 
-#define _USE_DIR_ITERATE2
-#ifdef _USE_DIR_ITERATE2
-static int walk_dir2 (ext2_ino_t dir, int   entry, struct ext2_dir_entry *dirent, int offset, int blocksize, char *buf, void *vpsid)
+
+int walk_dir2 (ext2_ino_t dir, int   entry, struct ext2_dir_entry *dirent, int offset, int blocksize, char *buf, void *vpsid)
 {
 	int res;
 	int len;
@@ -576,31 +572,7 @@ static int walk_dir2 (ext2_ino_t dir, int   entry, struct ext2_dir_entry *dirent
 	}
 	return 0;
 }
-#else
-static int walk_dir (struct ext2_dir_entry *de, int offset, int blocksize, char *buf, void *priv_data)
-{
-	int ret;
-	size_t flen;
-	char *fname;
-	struct dir_walk_data *b = priv_data;
 
-	debugf("enter");
-
-	flen = de->name_len & 0xff;
-	fname = (char *) malloc(sizeof(char) * (flen + 1));
-	if (fname == NULL) {
-		debugf("s = (char *) malloc(sizeof(char) * (%d + 1)); failed", flen);
-		return -ENOMEM;
-	}
-	snprintf(fname, flen + 1, "%s", de->name);
-	debugf("b->filler(b->buf, %s, NULL, 0);", fname);
-	ret = b->filler(b->buf, fname, NULL, 0);
-	free(fname);
-	
-	debugf("leave");
-	return ret;
-}
-#endif
 
 int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {

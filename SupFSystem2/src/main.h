@@ -94,6 +94,8 @@ int changeFileInode(ext2_filsys e2fs, ext2_ino_t ext2Ino, struct ext2_inode *ino
 
 /* read support */
 
+int walk_dir2 (ext2_ino_t dir, int   entry, struct ext2_dir_entry *dirent, int offset, int blocksize, char *buf, void *vpsid);
+
 int check_access(const char *path, int mask);
 
 int supFS_getattr (const char *path, struct stat *stbuf);
