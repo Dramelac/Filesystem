@@ -30,7 +30,6 @@ static struct fuse_operations fuseStruct_callback = {
         .unlink         = op_unlink,
         .rmdir          = op_rmdir,
         .rename         = supFS_rename,
-        .truncate       = op_truncate,
         .open           = supFS_open,
         .read           = supFS_read,
         .write          = supFS_write,
