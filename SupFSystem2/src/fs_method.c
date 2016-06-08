@@ -276,7 +276,7 @@ int supFS_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 	}
 
 	if (supFS_open(path, fi)) {
-        log_error("upFS_open() FAILED");
+        log_error("supFS_open() FAILED");
 		return -EIO;
 	}
 
@@ -782,9 +782,9 @@ int op_rename (const char *source, const char *dest)
 			/* ENOTEMPTY:
 			 *   newpath is a non-empty  directory
 			 */
-			returnValue = do_check_empty_dir(e2fs, dest_ino);
+			returnValue = checkDirIsEmpty(e2fs, dest_ino);
 			if (returnValue != 0) {
-				debugf("do_check_empty_dir dest %s failed",dest);
+				debugf("checkDirIsEmpty dest %s failed",dest);
 				goto out;
 			}
 		}
@@ -913,19 +913,15 @@ static int rmdir_proc (ext2_ino_t dir EXT2FS_ATTR((unused)),
 	return 0;
 }
 
-int do_check_empty_dir(ext2_filsys e2fs, ext2_ino_t ino)
+int checkDirIsEmpty(ext2_filsys ext2_fs, ext2_ino_t ext2Ino)
 {
-	errcode_t rc;
 	int empty = 1;
 
-	rc = ext2fs_dir_iterate2(e2fs, ino, 0, 0, rmdir_proc, &empty);
-	if (rc) {
-		debugf("while iterating over directory");
+	if (ext2fs_dir_iterate2(ext2_fs, ext2Ino, 0, 0, rmdir_proc, &empty)) {
 		return -EIO;
 	}
 
 	if (empty == 0) {
-		debugf("directory not empty");
 		return -ENOTEMPTY;
 	}
 
@@ -982,9 +978,9 @@ int op_rmdir (const char *path)
 		return -EIO;
 	}
 	
-	returnValue = do_check_empty_dir(e2fs, r_ino);
+	returnValue = checkDirIsEmpty(e2fs, r_ino);
 	if (returnValue) {
-		debugf("do_check_empty_dir filed");
+		debugf("checkDirIsEmpty filed");
         free(p_path);
 		return returnValue;
 	}

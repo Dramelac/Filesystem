@@ -122,7 +122,7 @@ int supFS_flush(const char *path, struct fuse_file_info *fi);
 
 int op_mkdir (const char *path, mode_t mode);
 
-int do_check_empty_dir(ext2_filsys e2fs, ext2_ino_t ino);
+int checkDirIsEmpty(ext2_filsys ext2_fs, ext2_ino_t ext2Ino);
 
 int op_rmdir (const char *path);
 
