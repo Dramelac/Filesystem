@@ -536,7 +536,8 @@ struct dir_walk_data {
 };
 
 
-int walk_dir2 (ext2_ino_t dir, int   entry, struct ext2_dir_entry *dirent, int offset, int blocksize, char *buf, void *vpsid)
+int parseDirectory(ext2_ino_t dir, int entry, struct ext2_dir_entry *dirent, int offset, int blocksize, char *buf,
+				   void *vpsid)
 {
 	int res;
 	int len;
@@ -549,22 +550,39 @@ int walk_dir2 (ext2_ino_t dir, int   entry, struct ext2_dir_entry *dirent, int o
 	memset(&st, 0, sizeof(st));
 
 	len = dirent->name_len & 0xff;
-	dirent->name[len] = 0; // bug wraparound
+	dirent->name[len] = 0;
 
-	switch  (dirent->name_len >> 8) {
-		case EXT2_FT_UNKNOWN: 	type = DT_UNKNOWN;	break;
-		case EXT2_FT_REG_FILE:	type = DT_REG;		break;
-		case EXT2_FT_DIR:	type = DT_DIR;		break;
-		case EXT2_FT_CHRDEV:	type = DT_CHR;		break;
-		case EXT2_FT_BLKDEV:	type = DT_BLK;		break;
-		case EXT2_FT_FIFO:	type = DT_FIFO;		break;
-		case EXT2_FT_SOCK:	type = DT_SOCK;		break;
-		case EXT2_FT_SYMLINK:	type = DT_LNK;		break;
-		default:		type = DT_UNKNOWN;	break;
+	switch (dirent->name_len >> 8) {
+		case EXT2_FT_UNKNOWN:
+            type = DT_UNKNOWN;
+            break;
+		case EXT2_FT_REG_FILE:
+            type = DT_REG;
+            break;
+		case EXT2_FT_DIR:
+            type = DT_DIR;
+            break;
+		case EXT2_FT_CHRDEV:
+            type = DT_CHR;
+            break;
+		case EXT2_FT_BLKDEV:
+            type = DT_BLK;
+            break;
+		case EXT2_FT_FIFO:
+            type = DT_FIFO;
+            break;
+		case EXT2_FT_SOCK:
+            type = DT_SOCK;
+            break;
+		case EXT2_FT_SYMLINK:
+            type = DT_LNK;
+            break;
+		default:
+            type = DT_UNKNOWN;
+            break;
 	}
 	st.st_ino = dirent->inode;
 	st.st_mode = type << 12;
-	debugf("%s %d %d %d", dirent->name, dirent->name_len & 0xff, dirent->name_len >> 8, type);
 	res = psid->filler(psid->buf, dirent->name, &st, 0);
 	if (res != 0) {
 		return BLOCK_ABORT;
@@ -587,7 +605,7 @@ int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t off
         return readNode(ext2fs, path, &ext2Ino, &ext2Inode);
 	}
 
-    if (ext2fs_dir_iterate2(ext2fs,ext2Ino, DIRENT_FLAG_INCLUDE_EMPTY, NULL, walk_dir2, &dwd)) {
+    if (ext2fs_dir_iterate2(ext2fs, ext2Ino, DIRENT_FLAG_INCLUDE_EMPTY, NULL, parseDirectory, &dwd)) {
 		return -EIO;
 	}
 
