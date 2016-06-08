@@ -530,27 +530,27 @@ int supFS_read(const char *path, char *buf, size_t size, off_t offset, struct fu
 }
 
 
-struct dir_walk_data {
+struct directoryParsingData {
 	char *buf;
 	fuse_fill_dir_t filler;
 };
 
 
-int parseDirectory(ext2_ino_t dir, int entry, struct ext2_dir_entry *dirent, int offset, int blocksize, char *buf,
-				   void *vpsid)
+int parseDirectory(ext2_ino_t dir, int entry, struct ext2_dir_entry *dirent, int offset, int blocksize, char *buffer,
+				   void *data)
 {
-	int res;
-	int len;
-	struct stat st;
+	int errorCode;
+	int lenght;
+	struct stat statData;
 	unsigned char type;
 	if (dirent->name_len <= 0) {
 		return 0;
 	}
-	struct dir_walk_data *psid=(struct dir_walk_data *)vpsid;
-	memset(&st, 0, sizeof(st));
+	struct directoryParsingData *psid=(struct directoryParsingData *)data;
+	memset(&statData, 0, sizeof(statData));
 
-	len = dirent->name_len & 0xff;
-	dirent->name[len] = 0;
+	lenght = dirent->name_len & 0xff;
+	dirent->name[lenght] = 0;
 
 	switch (dirent->name_len >> 8) {
 		case EXT2_FT_UNKNOWN:
@@ -581,10 +581,10 @@ int parseDirectory(ext2_ino_t dir, int entry, struct ext2_dir_entry *dirent, int
             type = DT_UNKNOWN;
             break;
 	}
-	st.st_ino = dirent->inode;
-	st.st_mode = type << 12;
-	res = psid->filler(psid->buf, dirent->name, &st, 0);
-	if (res != 0) {
+	statData.st_ino = dirent->inode;
+	statData.st_mode = type << 12;
+	errorCode = psid->filler(psid->buf, dirent->name, &statData, 0);
+	if (errorCode != 0) {
 		return BLOCK_ABORT;
 	}
 	return 0;
@@ -596,7 +596,7 @@ int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t off
 
 	ext2_ino_t ext2Ino;
 	struct ext2_inode ext2Inode;
-	struct dir_walk_data dwd={.buf = buf, .filler = filler};
+	struct directoryParsingData dwd={.buf = buf, .filler = filler};
 	ext2_filsys ext2fs = getCurrent_e2fs();
 	
 
