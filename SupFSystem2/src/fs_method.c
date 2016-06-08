@@ -306,18 +306,15 @@ int op_create (const char *path, mode_t mode, struct fuse_file_info *fi)
 }
 
 
-void op_destroy (void *userdata)
+void destroy(void *userdata)
 {
-	errcode_t rc;
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys ext2fs = current_ext2fs();
 
-	debugf("enter");
-	rc = ext2fs_close(e2fs);
-	if (rc) {
-		debugf("Error while trying to close ext2 filesystem");
+    if (ext2fs_close(ext2fs)) {
+        log_error("Error trying to close filesystem ext2");
+
 	}
-	e2fs = NULL;
-	debugf("leave");
+	ext2fs = NULL;
 }
 
 

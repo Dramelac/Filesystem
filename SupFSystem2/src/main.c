@@ -40,7 +40,7 @@ static struct fuse_operations fuseStruct_callback = {
         .readdir        = supFS_readdir,
         .releasedir     = op_release,
         .init		= op_init,
-        .destroy	= op_destroy,
+        .destroy	= destroy,
         .access         = check_access,
         .create         = op_create,
 };

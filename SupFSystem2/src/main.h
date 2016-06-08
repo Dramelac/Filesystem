@@ -76,7 +76,7 @@ static inline void debug_main_printf (const char *function, char *file, int line
 
 void * op_init (struct fuse_conn_info *conn);
 
-void op_destroy (void *userdata);
+void destroy(void *userdata);
 
 /* helper functions */
 
