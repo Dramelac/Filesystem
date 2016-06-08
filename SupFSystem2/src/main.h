@@ -114,7 +114,7 @@ int op_release (const char *path, struct fuse_file_info *fi);
 
 int modeToExt2Flag(mode_t mode);
 
-int supFS_create(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const char *fastsymlink);
+int createNode(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const char *fastsymlink);
 
 int op_create (const char *path, mode_t mode, struct fuse_file_info *fi);
 

@@ -175,11 +175,9 @@ int modeToExt2Flag(mode_t mode)
 	return EXT2_FT_UNKNOWN;
 }
 
-int supFS_create(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const char *fastsymlink)
+int createNode(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const char *fastsymlink)
 {
 	int returnValue;
-	time_t tm = time(NULL);
-	errcode_t rc;
 
 	char *actualPath;
 	char *objectivePpath;
@@ -200,25 +198,22 @@ int supFS_create(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, con
 		return returnValue;
 	}
 
-    // create new node
-	rc = ext2fs_new_inode(e2fs, dirNode, mode, 0, &newNode);
     // check status
-	if (rc) {
+	if (ext2fs_new_inode(e2fs, dirNode, mode, 0, &newNode)) {
         free(actualPath);
 		return -ENOMEM;
 	}
 
     // apply link to new file
 	do {
-		rc = ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode));
         // check fail + apply exampend space disk
-		if (rc == EXT2_ET_DIR_NO_SPACE && ext2fs_expand_dir(e2fs, dirNode)) {
+		if (ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode)) == EXT2_ET_DIR_NO_SPACE && ext2fs_expand_dir(e2fs, dirNode)) {
             free(actualPath);
             return -ENOSPC;
 		}
-	} while (rc == EXT2_ET_DIR_NO_SPACE);
+	} while (ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode)) == EXT2_ET_DIR_NO_SPACE);
     // check status
-	if (rc) {
+	if (ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode))) {
         free(actualPath);
 		return -EIO;
 	}
@@ -243,8 +238,8 @@ int supFS_create(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, con
 	}
 
     // write inode
-	rc = ext2fs_write_new_inode(e2fs, newNode, &inode);
-	if (rc) {
+
+	if (ext2fs_write_new_inode(e2fs, newNode, &inode)) {
         free(actualPath);
 		return -EIO;
 	}
@@ -258,8 +253,8 @@ int supFS_create(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, con
 	}
 
     // write final inode
-	rc = writeNode(e2fs, dirNode, &inode);
-	if (rc) {
+
+	if (writeNode(e2fs, dirNode, &inode)) {
 		return -EIO;
 	}
 
@@ -279,7 +274,7 @@ int op_create (const char *path, mode_t mode, struct fuse_file_info *fi)
 		return 0;
 	}
 
-	returnValue = supFS_create(e2fs, path, mode, 0, NULL);
+	returnValue = createNode(e2fs, path, mode, 0, NULL);
 	if (returnValue != 0) {
 		return returnValue;
 	}
@@ -484,7 +479,7 @@ int op_mknod (const char *path, mode_t mode, dev_t dev)
 	debugf("enter");
 	debugf("path = %s 0%o", path, mode);
 
-	returnValue = supFS_create(e2fs, path, mode, dev, NULL);
+	returnValue = createNode(e2fs, path, mode, dev, NULL);
 
 	debugf("leave");
 	return returnValue;
