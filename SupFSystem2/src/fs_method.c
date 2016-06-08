@@ -178,103 +178,91 @@ int modeToExt2Flag(mode_t mode)
 int supFS_create(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const char *fastsymlink)
 {
 	int returnValue;
-	time_t tm;
+	time_t tm = time(NULL);
 	errcode_t rc;
 
-	char *p_path;
-	char *r_path;
+	char *actualPath;
+	char *objectivePpath;
 
-	ext2_ino_t ino;
+	ext2_ino_t dirNode;
 	struct ext2_inode inode;
-	ext2_ino_t n_ino;
+	ext2_ino_t newNode;
 
 	struct fuse_context *context;
 
-	checkToDir(path, &p_path, &r_path);
-	returnValue = readNode(e2fs, p_path, &ino, &inode);
-
+    // from path get actuelPath add objectivePath
+	checkToDir(path, &actualPath, &objectivePpath);
+    // from actualPath get node
+	returnValue = readNode(e2fs, actualPath, &dirNode, &inode);
+    // check status
 	if (returnValue) {
-
-        free(p_path);
+        free(actualPath);
 		return returnValue;
 	}
 
-	rc = ext2fs_new_inode(e2fs, ino, mode, 0, &n_ino);
+    // create new node
+	rc = ext2fs_new_inode(e2fs, dirNode, mode, 0, &newNode);
+    // check status
 	if (rc) {
-        free(p_path);
+        free(actualPath);
 		return -ENOMEM;
 	}
 
+    // apply link to new file
 	do {
-		rc = ext2fs_link(e2fs, ino, r_path, n_ino, modeToExt2Flag(mode));
-		if (rc == EXT2_ET_DIR_NO_SPACE && ext2fs_expand_dir(e2fs, ino)) {
-            free(p_path);
+		rc = ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode));
+        // check fail + apply exampend space disk
+		if (rc == EXT2_ET_DIR_NO_SPACE && ext2fs_expand_dir(e2fs, dirNode)) {
+            free(actualPath);
             return -ENOSPC;
-
 		}
 	} while (rc == EXT2_ET_DIR_NO_SPACE);
-
+    // check status
 	if (rc) {
-        free(p_path);
+        free(actualPath);
 		return -EIO;
 	}
 
-	ext2fs_inode_alloc_stats2(e2fs, n_ino, +1, 0);
+    // alloc memory to node
+	ext2fs_inode_alloc_stats2(e2fs, newNode, +1, 0);
 	memset(&inode, 0, sizeof(inode));
-	tm = e2fs->now ? e2fs->now : time(NULL);
-	inode.i_mode = mode;
-	inode.i_atime = inode.i_ctime = inode.i_mtime = tm;
+    //apply properties
+    if (e2fs->now){
+        inode.i_atime = inode.i_ctime = inode.i_mtime = e2fs->now;
+    } else {
+        inode.i_atime = inode.i_ctime = inode.i_mtime = time(NULL);
+    }
+    inode.i_mode = mode;
 	inode.i_links_count = 1;
 	inode.i_size = 0;
 	context = fuse_get_context();
+    // apply perm user/group
 	if (context) {
 		inode.i_uid = context->uid;
 		inode.i_gid = context->gid;
 	}
-	if (e2fs->super->s_feature_incompat &
-	    EXT3_FEATURE_INCOMPAT_EXTENTS) {
-		int i;
-		struct ext3_extent_header *eh;
 
-		eh = (struct ext3_extent_header *) &inode.i_block[0];
-		eh->eh_depth = 0;
-		eh->eh_entries = 0;
-		eh->eh_magic = ext2fs_cpu_to_le16(EXT3_EXT_MAGIC);
-		i = (sizeof(inode.i_block) - sizeof(*eh)) /
-			sizeof(struct ext3_extent);
-		eh->eh_max = ext2fs_cpu_to_le16(i);
-		inode.i_flags |= EXT4_EXTENTS_FL;
-	}
-
-	if (S_ISLNK(mode) && fastsymlink != NULL) {
-		inode.i_size = strlen(fastsymlink);
-		strncpy((char *)&(inode.i_block[0]),fastsymlink,
-				(EXT2_N_BLOCKS * sizeof(inode.i_block[0])));
-	}
-
-	rc = ext2fs_write_new_inode(e2fs, n_ino, &inode);
+    // write inode
+	rc = ext2fs_write_new_inode(e2fs, newNode, &inode);
 	if (rc) {
-
-        free(p_path);
+        free(actualPath);
 		return -EIO;
 	}
 
-	/* update parent dir */
-	returnValue = readNode(e2fs, p_path, &ino, &inode);
+	// update parent directory
+	returnValue = readNode(e2fs, actualPath, &dirNode, &inode);
+    free(actualPath);
+
 	if (returnValue) {
-
-        free(p_path);
 		return -EIO;
 	}
-	inode.i_ctime = inode.i_mtime = tm;
-	rc = writeNode(e2fs, ino, &inode);
+
+    // write final inode
+	rc = writeNode(e2fs, dirNode, &inode);
 	if (rc) {
-
-        free(p_path);
 		return -EIO;
 	}
 
-    free(p_path);
 	return 0;
 }
 
