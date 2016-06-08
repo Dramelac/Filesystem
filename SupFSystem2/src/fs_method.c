@@ -1052,52 +1052,43 @@ int op_unlink (const char *path)
 }
 
 
-size_t do_write (ext2_file_t efile, const char *buf, size_t size, off_t offset)
+size_t process_write(ext2_file_t file, const char *buf, size_t size, off_t offset)
 {
 	int returnValue;
-	const char *tmp;
-	unsigned int wr;
+	const char *src;
+	unsigned int writeValue;
 	unsigned long long npos;
-	unsigned long long fsize;
+	unsigned long long filesize;
 
-	debugf("enter");
-
-	returnValue = ext2fs_file_get_lsize(efile, &fsize);
+	returnValue = ext2fs_file_get_lsize(file,  &filesize);
 	if (returnValue != 0) {
-		debugf("ext2fs_file_get_lsize(efile, &fsize); failed");
 		return returnValue;
 	}
-	if (offset + size > fsize) {
-		returnValue = ext2fs_file_set_size2(efile, offset + size);
+	if (offset + size > filesize) {
+		returnValue = ext2fs_file_set_size2(file, offset + size);
 		if (returnValue) {
-			debugf("extfs_file_set_size(efile, %lld); failed", offset + size);
 			return returnValue;
 		}
 	}
 
-	returnValue = ext2fs_file_llseek(efile, offset, SEEK_SET, &npos);
+	returnValue = ext2fs_file_llseek(file, offset, SEEK_SET, &npos);
 	if (returnValue) {
-		debugf("ext2fs_file_lseek(efile, %lld, SEEK_SET, &npos); failed", offset);
 		return returnValue;
 	}
 
-	for (returnValue = 0, wr = 0, tmp = buf; size > 0 && returnValue == 0; size -= wr, tmp += wr) {
-		returnValue = ext2fs_file_write(efile, tmp, size, &wr);
-		debugf("returnValue: %d, size: %u, written: %u", returnValue, size, wr);
+	for (returnValue = 0, writeValue = 0, src = buf; size > 0 && returnValue == 0; size -= writeValue, src += writeValue) {
+		returnValue = ext2fs_file_write(file, src, size, &writeValue);
 	}
 	if (returnValue) {
-		debugf("ext2fs_file_write(edile, tmp, size, &wr); failed");
 		return returnValue;
 	}
 
-	returnValue = ext2fs_file_flush(efile);
+	returnValue = ext2fs_file_flush(file);
 	if (returnValue) {
-		debugf("ext2_file_flush(efile); failed");
 		return returnValue;
 	}
 
-	debugf("leave");
-	return wr;
+	return writeValue;
 }
 
 int supFS_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
@@ -1108,7 +1099,7 @@ int supFS_write(const char *path, const char *buf, size_t size, off_t offset, st
     ext2_file_t file = EXT2FS_FILE(fi->fh);
 
 	file = process_open(ext2fs , path, O_WRONLY);
-    returnValue = do_write(file, buf, size, offset);
+    returnValue = process_write(file, buf, size, offset);
     releaseFile(file);
 
 
