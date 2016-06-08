@@ -120,7 +120,7 @@ int supFS_create(const char *path, mode_t mode, struct fuse_file_info *fi);
 
 int supFS_flush(const char *path, struct fuse_file_info *fi);
 
-int op_mkdir (const char *path, mode_t mode);
+int supFS_mkdir(const char *path, mode_t mode);
 
 int checkDirIsEmpty(ext2_filsys ext2_fs, ext2_ino_t ext2Ino);
 

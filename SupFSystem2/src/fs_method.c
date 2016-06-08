@@ -238,7 +238,6 @@ int createNode(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 	}
 
     // write inode
-
 	if (ext2fs_write_new_inode(e2fs, newNode, &inode)) {
         free(actualPath);
 		return -EIO;
@@ -253,7 +252,6 @@ int createNode(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 	}
 
     // write final inode
-
 	if (writeNode(e2fs, dirNode, &inode)) {
 		return -EIO;
 	}
@@ -364,98 +362,94 @@ void * initE2fs(struct fuse_conn_info *conn)
 }
 
 
-int op_mkdir (const char *path, mode_t mode)
+int supFS_mkdir(const char *path, mode_t mode)
 {
 	int returnValue;
+
 	time_t tm;
-	errcode_t rc;
+	errcode_t errorCode;
 
-	char *p_path;
-	char *r_path;
+	char *actualPath;
+	char *objectivePpath;
 
-	ext2_ino_t ino;
+	ext2_ino_t dirNode;
 	struct ext2_inode inode;
 
 	struct fuse_context *context;
 
 	ext2_filsys e2fs = getCurrent_e2fs();
 
-	debugf("enter");
-	debugf("path = %s, mode: 0%o, dir:0%o", path, mode, LINUX_S_IFDIR);
-
-	returnValue = checkToDir(path, &p_path, &r_path);
+    // from path to actual and objectivePath
+	returnValue = checkToDir(path, &actualPath, &objectivePpath);
 	if (returnValue != 0) {
-		debugf("check(%s); failed", path);
 		return returnValue;
 	}
 
-	debugf("parent: %s, child: %s", p_path, r_path);
-
-	returnValue = readNode(e2fs, p_path, &ino, &inode);
+    // get dirNode
+	returnValue = readNode(e2fs, actualPath, &dirNode, &inode);
 	if (returnValue) {
-		debugf("readNode(%s, &ext2Ino, &ext2Inode); failed", p_path);
-		free(p_path);
+		free(actualPath);
 		return returnValue;
 	}
 
 	do {
-		debugf("calling ext2fs_mkdir(e2fs, %d, 0, %s);", ino, r_path);
-		rc = ext2fs_mkdir(e2fs, ino, 0, r_path);
-		if (rc == EXT2_ET_DIR_NO_SPACE) {
-			debugf("calling ext2fs_expand_dir(e2fs, &d)", ino);
-			if (ext2fs_expand_dir(e2fs, ino)) {
-				debugf("error while expanding directory %s (%d)", p_path, ino);
-                free(p_path);
+		errorCode = ext2fs_mkdir(e2fs, dirNode, 0, objectivePpath);
+		if (errorCode == EXT2_ET_DIR_NO_SPACE) {
+			if (ext2fs_expand_dir(e2fs, dirNode)) {
+                free(actualPath);
 				return -ENOSPC;
 			}
 		}
-	} while (rc == EXT2_ET_DIR_NO_SPACE);
-	if (rc) {
-		debugf("ext2fs_mkdir(e2fs, %d, 0, %s); failed (%d)", ino, r_path, rc);
-		debugf("e2fs: %p, e2fs->inode_map: %p", e2fs, e2fs->inode_map);
-        free(p_path);
+        // try while no space
+	} while (errorCode == EXT2_ET_DIR_NO_SPACE);
+
+	if (errorCode) {
+        free(actualPath);
 		return -EIO;
 	}
 
-	returnValue = readNode(e2fs, path, &ino, &inode);
+	returnValue = readNode(e2fs, path, &dirNode, &inode);
 	if (returnValue) {
-		debugf("do_readinode(%s, &ext2Ino, &ext2Inode); failed", path);
-        free(p_path);
+        free(actualPath);
 		return -EIO;
 	}
-	tm = e2fs->now ? e2fs->now : time(NULL);
+
+    //apply properties
+    if (e2fs->now){
+        inode.i_ctime = inode.i_atime = inode.i_mtime = e2fs->now;
+    } else {
+        inode.i_ctime = inode.i_atime = inode.i_mtime = time(NULL);
+    }
+
 	inode.i_mode = LINUX_S_IFDIR | mode;
-	inode.i_ctime = inode.i_atime = inode.i_mtime = tm;
+
 	context = fuse_get_context();
+    // apply perm user/group
 	if (context) {
 		inode.i_uid = context->uid;
 		inode.i_gid = context->gid;
 	}
-	rc = writeNode(e2fs, ino, &inode);
-	if (rc) {
 
-        free(p_path);
+    // write inode
+	errorCode = writeNode(e2fs, dirNode, &inode);
+	if (errorCode) {
+        free(actualPath);
 		return -EIO;
 	}
 
-	/* update parent dir */
-	returnValue = readNode(e2fs, p_path, &ino, &inode);
+    // update parent directory
+	returnValue = readNode(e2fs, actualPath, &dirNode, &inode);
+    free(actualPath);
 	if (returnValue) {
-		debugf("do_readinode(%s, &ext2Ino, &ext2Inode); dailed", p_path);
-        free(p_path);
-		return -EIO;
-	}
-	inode.i_ctime = inode.i_mtime = tm;
-	rc = writeNode(e2fs, ino, &inode);
-	if (rc) {
-
-        free(p_path);
 		return -EIO;
 	}
 
-    free(p_path);
+    // write final inode
+	errorCode = writeNode(e2fs, dirNode, &inode);
+	if (errorCode) {
+		return -EIO;
+	}
 
-	debugf("leave");
 	return 0;
 }
 
