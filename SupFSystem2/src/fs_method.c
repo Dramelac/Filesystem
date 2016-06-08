@@ -261,30 +261,25 @@ int createNode(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 	return 0;
 }
 
-int op_create (const char *path, mode_t mode, struct fuse_file_info *fi)
+int supFS_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
-	int returnValue;
-	ext2_filsys e2fs = getCurrent_e2fs();
 
-	debugf("enter");
-	debugf("path = %s, mode: 0%o", path, mode);
+	ext2_filsys ext2Filsys = getCurrent_e2fs();
+
 
 	if (supFS_open(path, fi) == 0) {
-		debugf("leave");
 		return 0;
 	}
 
-	returnValue = createNode(e2fs, path, mode, 0, NULL);
-	if (returnValue != 0) {
-		return returnValue;
+	if (createNode(ext2Filsys, path, mode, 0, NULL) != 0) {
+		return createNode(ext2Filsys, path, mode, 0, NULL);
 	}
 
 	if (supFS_open(path, fi)) {
-		debugf("supFS_open(path, fi); failed");
+        log_error("upFS_open() FAILED");
 		return -EIO;
 	}
 
-	debugf("leave");
 	return 0;
 }
 

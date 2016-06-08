@@ -42,7 +42,7 @@ static struct fuse_operations fuseStruct_callback = {
         .init		= initE2fs,
         .destroy	= destroy,
         .access         = check_access,
-        .create         = op_create,
+        .create         = supFS_create,
 };
 
 int main (int argc, char *argv[])
