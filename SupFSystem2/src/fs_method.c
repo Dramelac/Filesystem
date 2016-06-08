@@ -207,9 +207,11 @@ int createNode(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
     // apply link to new file
 	do {
         // check fail + apply exampend space disk
-		if (ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode)) == EXT2_ET_DIR_NO_SPACE && ext2fs_expand_dir(e2fs, dirNode)) {
-            free(actualPath);
-            return -ENOSPC;
+		if (ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode)) == EXT2_ET_DIR_NO_SPACE) {
+            if (ext2fs_expand_dir(e2fs, dirNode)) {
+                free(actualPath);
+                return -ENOSPC;
+            }
 		}
 	} while (ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode)) == EXT2_ET_DIR_NO_SPACE);
     // check status
