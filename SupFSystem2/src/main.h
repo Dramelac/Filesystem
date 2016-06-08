@@ -30,7 +30,7 @@ struct supFs_data {
     ext2_filsys e2fs;
 };
 
-static ext2_filsys current_ext2fs();
+static ext2_filsys getCurrent_e2fs();
 
 #if ENABLE_DEBUG
 
@@ -74,7 +74,7 @@ static inline void debug_main_printf (const char *function, char *file, int line
 
 #endif /* ENABLE_DEBUG */
 
-void * op_init (struct fuse_conn_info *conn);
+void * initE2fs(struct fuse_conn_info *conn);
 
 void destroy(void *userdata);
 

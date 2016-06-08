@@ -1,6 +1,6 @@
 #include "main.h"
 
-ext2_filsys static current_ext2fs(void) {
+ext2_filsys static getCurrent_e2fs(void) {
 
     struct fuse_context *fuseGetContext = fuse_get_context();
     struct supFs_data *fsData = fuseGetContext->private_data;
@@ -141,7 +141,7 @@ int writeNode(ext2_filsys e2fs, ext2_ino_t ino, struct ext2_inode *inode)
 int check_access(const char *path, int mask)
 {
 	int returnValue;
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 	
 	returnValue = check(path);
 	if (returnValue != 0) {
@@ -281,7 +281,7 @@ int supFS_create(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, con
 int op_create (const char *path, mode_t mode, struct fuse_file_info *fi)
 {
 	int returnValue;
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 
 	debugf("enter");
 	debugf("path = %s, mode: 0%o", path, mode);
@@ -308,13 +308,12 @@ int op_create (const char *path, mode_t mode, struct fuse_file_info *fi)
 
 void destroy(void *userdata)
 {
-	ext2_filsys ext2fs = current_ext2fs();
+	ext2_filsys ext2fs = getCurrent_e2fs();
 
     if (ext2fs_close(ext2fs)) {
         log_error("Error trying to close filesystem ext2");
-
 	}
-	ext2fs = NULL;
+
 }
 
 
@@ -345,7 +344,7 @@ int supFS_getattr (const char *path, struct stat *stbuf)
 	int returnValue;
 	ext2_ino_t ino;
 	struct ext2_inode inode;
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 
 	returnValue = check(path);
 	if (returnValue != 0) {
@@ -368,7 +367,7 @@ int supFS_getattr (const char *path, struct stat *stbuf)
 }
 
 
-void * op_init (struct fuse_conn_info *conn)
+void * initE2fs(struct fuse_conn_info *conn)
 {
 	errcode_t rc;
 	struct fuse_context *cntx=fuse_get_context();
@@ -407,7 +406,7 @@ int op_mkdir (const char *path, mode_t mode)
 
 	struct fuse_context *context;
 
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 
 	debugf("enter");
 	debugf("path = %s, mode: 0%o, dir:0%o", path, mode, LINUX_S_IFDIR);
@@ -492,7 +491,7 @@ int op_mkdir (const char *path, mode_t mode)
 int op_mknod (const char *path, mode_t mode, dev_t dev)
 {
 	int returnValue;
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 
 	debugf("enter");
 	debugf("path = %s 0%o", path, mode);
@@ -535,7 +534,7 @@ ext2_file_t process_open (ext2_filsys e2fs, const char *path, int flags)
 int supFS_open (const char *path, struct fuse_file_info *fi)
 {
 	ext2_file_t file;
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 
 	file = process_open(e2fs, path, fi->flags);
 	if (file == NULL) {
@@ -553,7 +552,7 @@ int supFS_read(const char *path, char *buf, size_t size, off_t offset, struct fu
 	errcode_t errorReturnChecker;
 	unsigned int readBytesFile;
 	ext2_file_t efile = EXT2FS_FILE(fi->fh);
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 
 	// open file
 	efile = process_open(e2fs, path, O_RDONLY);
@@ -649,7 +648,7 @@ int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t off
 	ext2_ino_t ext2Ino;
 	struct ext2_inode ext2Inode;
 	struct dir_walk_data dwd={.buf = buf, .filler = filler};
-	ext2_filsys ext2fs = current_ext2fs();
+	ext2_filsys ext2fs = getCurrent_e2fs();
 	
 
 	if (readNode(ext2fs, path, &ext2Ino, &ext2Inode)) {
@@ -747,7 +746,7 @@ int op_rename (const char *source, const char *dest)
 	struct ext2_inode dest_inode;
 	struct ext2_inode d_src_inode;
 	struct ext2_inode d_dest_inode;
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 
 	debugf("source: %s, dest: %s", source, dest);
 
@@ -977,7 +976,7 @@ int op_rmdir (const char *path)
 	ext2_ino_t r_ino;
 	struct ext2_inode r_inode;
 	
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 
 	debugf("enter");
 	debugf("path = %s", path);
@@ -1066,7 +1065,7 @@ int op_truncate (const char *path, off_t length)
 	ext2_ino_t ino;
 	struct ext2_inode inode;
 	ext2_file_t file;
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 
 	debugf("enter");
 	debugf("path = %s", path);
@@ -1129,7 +1128,7 @@ int op_unlink (const char *path)
 	struct ext2_inode p_inode;
 	struct ext2_inode r_inode;
 
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 
 	debugf("enter");
 	debugf("path = %s", path);
@@ -1251,7 +1250,7 @@ int op_write (const char *path, const char *buf, size_t size, off_t offset, stru
 {
 	size_t returnValue;
 	ext2_file_t file = EXT2FS_FILE(fi->fh);
-	ext2_filsys e2fs = current_ext2fs();
+	ext2_filsys e2fs = getCurrent_e2fs();
 
 	debugf("enter");
 	debugf("path = %s", path);
