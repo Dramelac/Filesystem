@@ -550,33 +550,31 @@ int supFS_open (const char *path, struct fuse_file_info *fi)
 }
 
 
-int op_read (const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
+int supFS_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
 	__u64 pos;
-	errcode_t rc;
-	unsigned int bytes;
+	errcode_t errorReturnChecker;
+	unsigned int readBytesFile;
 	ext2_file_t efile = EXT2FS_FILE(fi->fh);
 	ext2_filsys e2fs = current_ext2fs();
 
-	debugf("enter");
-	debugf("path = %s", path);
-
+	// open file
 	efile = process_open(e2fs, path, O_RDONLY);
-	rc = ext2fs_file_llseek(efile, offset, SEEK_SET, &pos);
-	if (rc) {
-		do_release(efile);
+	errorReturnChecker = ext2fs_file_llseek(efile, offset, SEEK_SET, &pos);
+	if (errorReturnChecker) {
+        releaseFile(efile);
 		return -EINVAL;
 	}
 
-	rc = ext2fs_file_read(efile, buf, size, &bytes);
-	if (rc) {
-		do_release(efile);
+	// read file content
+	errorReturnChecker = ext2fs_file_read(efile, buf, size, &readBytesFile);
+	if (errorReturnChecker) {
+        releaseFile(efile);
 		return -EIO;
 	}
-	do_release(efile);
+    releaseFile(efile);
 
-	debugf("leave");
-	return bytes;
+	return readBytesFile;
 }
 
 
@@ -684,22 +682,11 @@ int op_readdir (const char *path, void *buf, fuse_fill_dir_t filler, off_t offse
 }
 
 
-int do_release (ext2_file_t efile)
+int releaseFile(ext2_file_t efile)
 {
-	errcode_t rc;
-
-	debugf("enter");
-	debugf("path = (%p)", efile);
-
-	if (efile == NULL) {
-		return -ENOENT;
-	}
-	rc = ext2fs_file_close(efile);
-	if (rc) {
+	if (ext2fs_file_close(efile)) {
 		return -EIO;
 	}
-
-	debugf("leave");
 	return 0;
 }
 
@@ -710,9 +697,9 @@ int op_release (const char *path, struct fuse_file_info *fi)
 
 	debugf("enter");
 	debugf("path = %s (%p)", path, efile);
-	returnValue = do_release(efile);
+	returnValue = releaseFile(efile);
 	if (returnValue != 0) {
-		debugf("do_release() failed");
+		debugf("releaseFile() failed");
 		return returnValue;
 	}
 
@@ -1114,7 +1101,7 @@ int op_truncate (const char *path, off_t length)
 
 	errcode = ext2fs_file_set_size2(file, length);
 	if (errcode) {
-		do_release(file);
+        releaseFile(file);
 		debugf("ext2fs_file_set_size(file, %d); failed", length);
 		if (errcode == EXT2_ET_FILE_TOO_BIG) {
 			return -EFBIG;
@@ -1125,19 +1112,19 @@ int op_truncate (const char *path, off_t length)
 	returnValue = readNode(e2fs, path, &ino, &inode);
 	if (returnValue) {
 		debugf("readNode(%s, &ext2Ino, &vnode); failed", path);
-		do_release(file);
+        releaseFile(file);
 		return returnValue;
 	}
 	inode.i_ctime = e2fs->now ? e2fs->now : time(NULL);
 	returnValue = writeNode(e2fs, ino, &inode);
 	if (returnValue){
-		do_release(file);
+        releaseFile(file);
 		return -EIO;
 	}
 
-    returnValue = do_release(file);
+    returnValue = releaseFile(file);
 	if (returnValue != 0) {
-		debugf("do_release(efile); failed");
+		debugf("releaseFile(efile); failed");
 		return returnValue;
 	}
 
@@ -1288,7 +1275,7 @@ int op_write (const char *path, const char *buf, size_t size, off_t offset, stru
 
 	file = process_open(e2fs, path, O_WRONLY);
 	returnValue = do_write(file, buf, size, offset);
-	do_release(file);
+    releaseFile(file);
 
 	debugf("leave");
 	return returnValue;

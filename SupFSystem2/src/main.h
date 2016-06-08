@@ -102,11 +102,11 @@ ext2_file_t process_open (ext2_filsys e2fs, const char *path, int flags);
 
 int supFS_open(const char *path, struct fuse_file_info *fi);
 
-int op_read (const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+int supFS_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 
 int op_readdir (const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
 
-int do_release (ext2_file_t efile);
+int releaseFile(ext2_file_t efile);
 
 int op_release (const char *path, struct fuse_file_info *fi);
 
