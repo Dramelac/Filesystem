@@ -205,17 +205,19 @@ int createNode(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 	}
 
     // apply link to new file
+    errcode_t errorCode;
 	do {
         // check fail + apply exampend space disk
-		if (ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode)) == EXT2_ET_DIR_NO_SPACE) {
+        errorCode = ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode));
+		if (errorCode == EXT2_ET_DIR_NO_SPACE) {
             if (ext2fs_expand_dir(e2fs, dirNode)) {
                 free(actualPath);
                 return -ENOSPC;
             }
 		}
-	} while (ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode)) == EXT2_ET_DIR_NO_SPACE);
+	} while (errorCode == EXT2_ET_DIR_NO_SPACE);
     // check status
-	if (ext2fs_link(e2fs, dirNode, objectivePpath, newNode, modeToExt2Flag(mode))) {
+	if (errorCode) {
         free(actualPath);
 		return -EIO;
 	}
@@ -368,7 +370,6 @@ int supFS_mkdir(const char *path, mode_t mode)
 {
 	int returnValue;
 
-	time_t tm;
 	errcode_t errorCode;
 
 	char *actualPath;
@@ -470,7 +471,6 @@ ext2_file_t process_open (ext2_filsys e2fs, const char *path, int flags)
 	ext2_ino_t ino;
 	ext2_file_t file;
 	struct ext2_inode ext2Inode;
-	struct fuse_context *context = fuse_get_context();
 
 	returnValue = check(path);
 	if (returnValue != 0) {
