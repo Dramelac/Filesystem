@@ -1196,19 +1196,17 @@ size_t do_write (ext2_file_t efile, const char *buf, size_t size, off_t offset)
 	return wr;
 }
 
-int op_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
+int supFS_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
-	size_t returnValue;
-	ext2_file_t file = EXT2FS_FILE(fi->fh);
-	ext2_filsys e2fs = getCurrent_e2fs();
+    size_t returnValue;
 
-	debugf("enter");
-	debugf("path = %s", path);
+    ext2_filsys ext2fs = getCurrent_e2fs();
+    ext2_file_t file = EXT2FS_FILE(fi->fh);
 
-	file = process_open(e2fs, path, O_WRONLY);
-	returnValue = do_write(file, buf, size, offset);
+	file = process_open(ext2fs , path, O_WRONLY);
+    returnValue = do_write(file, buf, size, offset);
     releaseFile(file);
 
-	debugf("leave");
-	return returnValue;
+
+	return (int)returnValue;
 }

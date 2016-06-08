@@ -130,7 +130,7 @@ int op_unlink (const char *path);
 
 size_t do_write (ext2_file_t efile, const char *buf, size_t size, off_t offset);
 
-int op_write (const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+int supFS_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 
 int supFS_mknod(const char *path, mode_t mode, dev_t dev);
 
