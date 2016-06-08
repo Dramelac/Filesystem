@@ -646,38 +646,24 @@ static int walk_dir (struct ext2_dir_entry *de, int offset, int blocksize, char 
 }
 #endif
 
-int op_readdir (const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
+int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
 {
-	int returnValue;
-	errcode_t rc;
-	ext2_ino_t ino;
-	struct ext2_inode inode;
-	struct dir_walk_data dwd={
-		.buf = buf,
-		.filler = filler};
-	ext2_filsys e2fs = current_ext2fs();
 
-	debugf("enter");
-	debugf("path = %s", path);
+	ext2_ino_t ext2Ino;
+	struct ext2_inode ext2Inode;
+	struct dir_walk_data dwd={.buf = buf, .filler = filler};
+	ext2_filsys ext2fs = current_ext2fs();
 	
-	returnValue = readNode(e2fs, path, &ino, &inode);
-	if (returnValue) {
-		debugf("readNode(%s, &ext2Ino, &ext2Inode); failed", path);
-		return returnValue;
+
+	if (readNode(ext2fs, path, &ext2Ino, &ext2Inode)) {
+		log_error("readNode() FAILED");
+        return readNode(ext2fs, path, &ext2Ino, &ext2Inode);
 	}
 
-#ifdef _USE_DIR_ITERATE2
-	rc = ext2fs_dir_iterate2(e2fs,ino, DIRENT_FLAG_INCLUDE_EMPTY, NULL, walk_dir2, &dwd);
-#else
-	rc = ext2fs_dir_iterate(e2fs, ino, 0, NULL, walk_dir, &dwd);
-#endif
-
-	if (rc) {
-		debugf("Error while trying to ext2fs_dir_iterate %s", path);
+    if (ext2fs_dir_iterate2(ext2fs,ext2Ino, DIRENT_FLAG_INCLUDE_EMPTY, NULL, walk_dir2, &dwd)) {
 		return -EIO;
 	}
 
-	debugf("leave");
 	return 0;
 }
 
