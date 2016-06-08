@@ -510,36 +510,25 @@ int op_mknod (const char *path, mode_t mode, dev_t dev)
 ext2_file_t process_open (ext2_filsys e2fs, const char *path, int flags)
 {
 	int returnValue;
-	errcode_t errcode;
+
 	ext2_ino_t ino;
 	ext2_file_t file;
 	struct ext2_inode ext2Inode;
 	struct fuse_context *context = fuse_get_context();
-	struct supFs_data *e2data = context->private_data;
 
 	returnValue = check(path);
 	if (returnValue != 0) {
-        char logError[100]="check() failed";
-        strcat(logError,path);
-        log_error(logError);
+        log_error("check() failed");
 		return NULL;
 	}
 
 	returnValue = readNode(e2fs, path, &ino, &ext2Inode);
 	if (returnValue) {
-        char logError[100]="readNode() failed";
-        strcat(logError,path);
-        log_error(logError);
+        log_error("readNode() failed");
 		return NULL;
 	}
 
-	errcode = ext2fs_file_open2(
-			e2fs,
-			ino,
-			&ext2Inode,
-			(((flags & O_ACCMODE) != 0) ? EXT2_FILE_WRITE : 0) | EXT2_FILE_SHARED_INODE, 
-			&file);
-	if (errcode) {
+	if (ext2fs_file_open2(e2fs,ino, &ext2Inode, (((flags & O_ACCMODE) != 0) ? EXT2_FILE_WRITE : 0) | EXT2_FILE_SHARED_INODE, &file)) {
 		return NULL;
 	}
 
