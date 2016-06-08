@@ -342,24 +342,23 @@ int supFS_getattr (const char *path, struct stat *stbuf)
 
 void * initE2fs(struct fuse_conn_info *conn)
 {
-	errcode_t rc;
+	errcode_t errorCode;
 	struct fuse_context *cntx=fuse_get_context();
 	struct supFs_data *e2data=cntx->private_data;
 
-	rc = ext2fs_open(e2data->device, EXT2_FLAG_RW, 0, 0, unix_io_manager, &e2data->e2fs);
-	if (rc) {
+	errorCode = ext2fs_open(e2data->device, EXT2_FLAG_RW, 0, 0, unix_io_manager, &e2data->e2fs);
+	if (errorCode) {
 		log_error("Error while trying to open device");
 		exit(1);
 	}
 
-	rc = ext2fs_read_bitmaps(e2data->e2fs);
-	if (rc) {
+	errorCode = ext2fs_read_bitmaps(e2data->e2fs);
+	if (errorCode) {
 		log_error("Error while reading bitmaps");
 		ext2fs_close(e2data->e2fs);
 		exit(1);
 	}
 	log_info("FileSystem ReadWrite");
-
 
 	return e2data;
 }
@@ -461,18 +460,10 @@ int op_mkdir (const char *path, mode_t mode)
 }
 
 
-int op_mknod (const char *path, mode_t mode, dev_t dev)
+int supFS_mknod(const char *path, mode_t mode, dev_t dev)
 {
-	int returnValue;
 	ext2_filsys e2fs = getCurrent_e2fs();
-
-	debugf("enter");
-	debugf("path = %s 0%o", path, mode);
-
-	returnValue = createNode(e2fs, path, mode, dev, NULL);
-
-	debugf("leave");
-	return returnValue;
+	return createNode(e2fs, path, mode, dev, NULL);;
 }
 
 
