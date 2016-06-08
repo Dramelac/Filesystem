@@ -72,12 +72,11 @@ void fillstatbuffer(ext2_filsys e2fs, ext2_ino_t ext2Ino, struct ext2_inode *ino
 
 }
 
-static int release_blocks_proc (ext2_filsys fs, blk_t *blocknr, int blockcnt, void *private)
+static int blocksRelease(ext2_filsys fs, blk_t *blocknr, int blockcnt, void *private)
 {
 	blk_t block;
 	block = *blocknr;
 	ext2fs_block_alloc_stats(fs, block, -1);
-
 	return 0;
 }
 
@@ -95,7 +94,7 @@ int changeFileInode(ext2_filsys e2fs, ext2_ino_t ext2Ino, struct ext2_inode *ino
 	}
 
 	if (ext2fs_inode_has_valid_blocks(inode)) {
-		ext2fs_block_iterate(e2fs, ext2Ino, 0, blockBuffer, release_blocks_proc, NULL);
+        ext2fs_block_iterate(e2fs, ext2Ino, 0, blockBuffer, blocksRelease, NULL);
 	}
 	ext2fs_inode_alloc_stats2(e2fs, ext2Ino, -1, LINUX_S_ISDIR(inode->i_mode));
 
@@ -614,9 +613,9 @@ int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t off
 }
 
 
-int releaseFile(ext2_file_t efile)
+int releaseFile(ext2_file_t file)
 {
-	if (ext2fs_file_close(efile)) {
+	if (ext2fs_file_close(file)) {
 		return -EIO;
 	}
 	return 0;
@@ -636,32 +635,21 @@ int supFS_release(const char *path, struct fuse_file_info *fi)
 }
 
 
-static int fix_dotdot_proc (ext2_ino_t dir EXT2FS_ATTR((unused)),
-		int entry EXT2FS_ATTR((unused)),
-		struct ext2_dir_entry *dirent,
-		int offset EXT2FS_ATTR((unused)),
-		int blocksize EXT2FS_ATTR((unused)),
-		char *buf EXT2FS_ATTR((unused)), void *private)
+static int processToFixHeritage(ext2_ino_t dir EXT2FS_ATTR((unused)), int entry EXT2FS_ATTR((unused)), struct ext2_dir_entry *dirent, int offset EXT2FS_ATTR((unused)), int blocksize EXT2FS_ATTR((unused)), char *buffer EXT2FS_ATTR((unused)), void *private)
 {
-	ext2_ino_t *p_dotdot = (ext2_ino_t *) private;
-
-	debugf("enter");
-	debugf("walking on: %s", dirent->name);
+	ext2_ino_t *ext2Ino = (ext2_ino_t *) private;
 
 	if ((dirent->name_len & 0xFF) == 2 && strncmp(dirent->name, "..", 2) == 0) {
-		dirent->inode = *p_dotdot;
-
-		debugf("leave (found '..')");
+		dirent->inode = *ext2Ino;
 		return DIRENT_ABORT | DIRENT_CHANGED;
 	} else {
-		debugf("leave");
 		return 0;
 	}
 }
 
 static int fixHeritage(ext2_filsys ext2fs, ext2_ino_t ext2Ino, ext2_ino_t dotdot)
 {
-	if (ext2fs_dir_iterate2(ext2fs, ext2Ino, DIRENT_FLAG_INCLUDE_EMPTY, 0, fix_dotdot_proc, &dotdot)) {
+	if (ext2fs_dir_iterate2(ext2fs, ext2Ino, DIRENT_FLAG_INCLUDE_EMPTY, 0, processToFixHeritage, &dotdot)) {
 		return -EIO;
 	}
 	return 0;

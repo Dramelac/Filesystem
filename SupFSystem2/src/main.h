@@ -141,4 +141,7 @@ int supFS_rename(const char *actual_path, const char *objectif_path);
 
 static int fixHeritage(ext2_filsys ext2fs, ext2_ino_t ext2Ino, ext2_ino_t dotdot);
 
+static int processToFixHeritage(ext2_ino_t dir EXT2FS_ATTR((unused)), int entry EXT2FS_ATTR((unused)), struct ext2_dir_entry *dirent, int offset EXT2FS_ATTR((unused)), int blocksize EXT2FS_ATTR((unused)), char *buffer EXT2FS_ATTR((unused)), void *private);
+
+
 #endif /* FUSEEXT2_H_ */
