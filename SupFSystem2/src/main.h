@@ -126,7 +126,7 @@ int checkDirIsEmpty(ext2_filsys ext2_fs, ext2_ino_t ext2Ino);
 
 int op_rmdir (const char *path);
 
-int op_unlink (const char *path);
+int supFS_unlink(const char *path);
 
 size_t do_write (ext2_file_t efile, const char *buf, size_t size, off_t offset);
 

@@ -766,7 +766,7 @@ int supFS_rename(const char *actual_path, const char *objectif_path)
 		if (LINUX_S_ISDIR(parent_destinataire_inode.i_mode)) {
 			errcode = op_rmdir(objectif_path);
 		} else {
-			errcode = op_unlink(objectif_path);
+			errcode = supFS_unlink(objectif_path);
 		}
 		if (errcode) {
 			return returnValue;
@@ -969,85 +969,79 @@ int op_rmdir (const char *path)
 	return 0;
 }
 
-int op_unlink (const char *path)
+int supFS_unlink(const char *path)
 {
 	int returnValue;
 	errcode_t errcode;
 
-	char *p_path;
-	char *r_path;
+	char *parentDir;
+	char *fileName;
 
 	ext2_ino_t ext2Ino;
 	ext2_ino_t rIno;
-	struct ext2_inode p_inode;
-	struct ext2_inode r_inode;
+	struct ext2_inode parentInode;
+	struct ext2_inode destInode;
 
 	ext2_filsys e2fs = getCurrent_e2fs();
 
-	debugf("enter");
-	debugf("path = %s", path);
-
 	returnValue = check(path);
 	if (returnValue != 0) {
-		debugf("check(%s); failed", path);
+		log_error("check unlink failed");
 		return returnValue;
 	}
 
-	returnValue = checkToDir(path, &p_path, &r_path);
+	returnValue = checkToDir(path, &parentDir, &fileName);
 	if (returnValue != 0) {
-		debugf("checkToDir: failed");
+		log_error("checkToDir failed");
 		return returnValue;
 	}
 
-	debugf("parent: %s, child: %s", p_path, r_path);
-
-	returnValue = readNode(e2fs, p_path, &ext2Ino, &p_inode);
+    returnValue = readNode(e2fs, path, &rIno, &destInode);
+    if (returnValue) {
+        log_error("readinode 2 failed");
+        free(parentDir);
+        return returnValue;
+    }
+	returnValue = readNode(e2fs, parentDir, &ext2Ino, &parentInode);
 	if (returnValue) {
-		debugf("do_readinode(%s, &ext2Ino, &p_inode); failed", path);
-        free(p_path);
-		return returnValue;
-	}
-	returnValue = readNode(e2fs, path, &rIno, &r_inode);
-	if (returnValue) {
-		debugf("do_readinode(%s, &rIno, &r_inode); failed", path);
-        free(p_path);
+		log_error("readinode failed");
+        free(parentDir);
 		return returnValue;
 	}
 
-	if (LINUX_S_ISDIR(r_inode.i_mode)) {
-		debugf("%s is a directory", path);
-        free(p_path);
+	if (LINUX_S_ISDIR(destInode.i_mode)) {
+		log_error("It is a directory");
+        free(parentDir);
 		return -EISDIR;
 	}
 
-	errcode = ext2fs_unlink(e2fs, ext2Ino, r_path, rIno, 0);
+	errcode = ext2fs_unlink(e2fs, ext2Ino, fileName, rIno, 0);
 	if (errcode) {
-		debugf("ext2fs_unlink(e2fs, %d, %s, %d, 0); failed", ext2Ino, r_path, rIno);
-        free(p_path);
+		log_error("ext2fs_unlink failed");
+        free(parentDir);
 		return -EIO;
 	}
 
-	p_inode.i_ctime = p_inode.i_mtime = e2fs->now ? e2fs->now : time(NULL);
-	returnValue = writeNode(e2fs, ext2Ino, &p_inode);
+	parentInode.i_ctime = parentInode.i_mtime = e2fs->now;
+	returnValue = writeNode(e2fs, ext2Ino, &parentInode);
 	if (returnValue) {
-		debugf("writeNode(e2fs, ext2Ino, &p_inode); failed");
-        free(p_path);
+		log_error("writeNode failed");
+        free(parentDir);
 		return -EIO;
 	}
 
-	if (r_inode.i_links_count > 0) {
-		r_inode.i_links_count -= 1;
+	if (destInode.i_links_count > 0) {
+		destInode.i_links_count -= 1;
 	}
-	r_inode.i_ctime = e2fs->now ? e2fs->now : time(NULL);
-	errcode = writeNode(e2fs, rIno, &r_inode);
+	destInode.i_ctime = e2fs->now;
+	errcode = writeNode(e2fs, rIno, &destInode);
 	if (errcode) {
-		debugf("writeNode(e2fs, &rIno, &r_inode); failed");
-        free(p_path);
+		log_error("writeNode2 failed");
+        free(parentDir);
 		return -EIO;
 	}
 
-    free(p_path);
-	debugf("leave");
+    free(parentDir);
 	return 0;
 }
 
