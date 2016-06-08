@@ -295,25 +295,20 @@ void destroy(void *userdata)
 }
 
 
-int op_flush (const char *path, struct fuse_file_info *fi)
+int supFS_flush(const char *path, struct fuse_file_info *fi)
 {
-	errcode_t rc;
-	ext2_file_t efile = EXT2FS_FILE(fi->fh);
+	ext2_file_t file = EXT2FS_FILE(fi->fh);
 
-	debugf("enter");
-	debugf("path = %s (%p)", path, efile);
-	
-	if (efile == NULL) {
-		return -ENOENT;
-	}
-	
-	rc = ext2fs_file_flush(efile);
-	if (rc) {
-		return -EIO;
-	}
-	
-	debugf("leave");
-	return 0;
+	if(file != NULL){
+        if (ext2fs_file_flush(file)) {
+            return -EIO;
+        }
+
+        return 0;
+    } else{
+        return -ENOENT;
+    }
+
 }
 
 
@@ -650,20 +645,16 @@ int releaseFile(ext2_file_t efile)
 	return 0;
 }
 
-int op_release (const char *path, struct fuse_file_info *fi)
+int supFS_release(const char *path, struct fuse_file_info *fi)
 {
-	int returnValue;
-	ext2_file_t efile = (ext2_file_t) (unsigned long) fi->fh;
+	ext2_file_t file = (ext2_file_t) (unsigned long) fi->fh;
 
-	debugf("enter");
-	debugf("path = %s (%p)", path, efile);
-	returnValue = releaseFile(efile);
-	if (returnValue != 0) {
-		debugf("releaseFile() failed");
-		return returnValue;
+
+	if (releaseFile(file) != 0) {
+		log_error("releaseFile() FAILED");
+		return releaseFile(file);
 	}
 
-	debugf("leave");
 	return 0;
 }
 

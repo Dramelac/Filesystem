@@ -108,7 +108,7 @@ int supFS_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t off
 
 int releaseFile(ext2_file_t efile);
 
-int op_release (const char *path, struct fuse_file_info *fi);
+int supFS_release(const char *path, struct fuse_file_info *fi);
 
 /* write support */
 
@@ -118,7 +118,7 @@ int createNode(ext2_filsys e2fs, const char *path, mode_t mode, dev_t dev, const
 
 int supFS_create(const char *path, mode_t mode, struct fuse_file_info *fi);
 
-int op_flush (const char *path, struct fuse_file_info *fi);
+int supFS_flush(const char *path, struct fuse_file_info *fi);
 
 int op_mkdir (const char *path, mode_t mode);
 
