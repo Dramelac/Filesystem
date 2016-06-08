@@ -1,6 +1,6 @@
 #include "main.h"
 
-ext2_filsys static getCurrent_e2fs(void) {
+ext2_filsys getCurrent_e2fs(void) {
 
     struct fuse_context *fuseGetContext = fuse_get_context();
     struct supFs_data *fsData = fuseGetContext->private_data;
@@ -1009,63 +1009,6 @@ int op_rmdir (const char *path)
 	debugf("leave");
 	return 0;
 }
-
-int op_truncate (const char *path, off_t length)
-{
-	int returnValue;
-	errcode_t errcode;
-	ext2_ino_t ino;
-	struct ext2_inode inode;
-	ext2_file_t file;
-	ext2_filsys e2fs = getCurrent_e2fs();
-
-	debugf("enter");
-	debugf("path = %s", path);
-
-	returnValue = check(path);
-	if (returnValue != 0) {
-		debugf("check(%s); failed", path);
-		return returnValue;
-	}
-	file = process_open(e2fs, path, O_WRONLY);
-	if (file == NULL) {
-		debugf("process_open(%s); failed", path);
-		return -ENOENT;
-	}
-
-	errcode = ext2fs_file_set_size2(file, length);
-	if (errcode) {
-        releaseFile(file);
-		debugf("ext2fs_file_set_size(file, %d); failed", length);
-		if (errcode == EXT2_ET_FILE_TOO_BIG) {
-			return -EFBIG;
-		}
-		return -EIO;
-	}
-
-	returnValue = readNode(e2fs, path, &ino, &inode);
-	if (returnValue) {
-		debugf("readNode(%s, &ext2Ino, &vnode); failed", path);
-        releaseFile(file);
-		return returnValue;
-	}
-	inode.i_ctime = e2fs->now ? e2fs->now : time(NULL);
-	returnValue = writeNode(e2fs, ino, &inode);
-	if (returnValue){
-        releaseFile(file);
-		return -EIO;
-	}
-
-    returnValue = releaseFile(file);
-	if (returnValue != 0) {
-		debugf("releaseFile(efile); failed");
-		return returnValue;
-	}
-
-	debugf("leave");
-	return 0;
-}
-
 
 int op_unlink (const char *path)
 {
