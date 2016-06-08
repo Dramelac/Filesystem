@@ -126,7 +126,7 @@ int supFS_mkdir(const char *path, mode_t mode);
 
 int checkDirIsEmpty(ext2_filsys ext2_fs, ext2_ino_t ext2Ino);
 
-int op_rmdir (const char *path);
+int supFS_rmdir(const char *path);
 
 int supFS_unlink(const char *path);
 
