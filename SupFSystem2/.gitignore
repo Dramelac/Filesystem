@@ -1,0 +1,14 @@
+/Makefile
+/Makefile.in
+/aclocal.m4
+/ar-lib
+/compile
+/config*
+!configure.ac
+/depcomp
+/install-sh
+/libtool
+/ltmain.sh
+/missing
+/stamp-h1
+/supFS.pc

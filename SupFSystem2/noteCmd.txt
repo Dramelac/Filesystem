@@ -1,0 +1,9 @@
+a l'endroit ou se trouve l'executable 
+./configure
+make
+sudo make install
+sudo make uninstall
+
+supFS -d -s -f mountDir/ fs.ext2
+sudo supFS fs.ext2 mountDir
+sudo umount mountDir (si core dump)
