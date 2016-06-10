@@ -66,11 +66,11 @@ int main (int argc, char *argv[])
     char parsed_options[255] = "rw,debug,allow_other,default_permissions,fsname=";
     strcat(parsed_options, dataOptionsStruct.device);
 
-    snprintf(msg, sizeof(msg), "dataOptionsStruct.device: %s", dataOptionsStruct.device);
+    snprintf(msg, sizeof(msg), "device: %s", dataOptionsStruct.device);
     log_info(msg);
-    snprintf(msg, sizeof(msg), "dataOptionsStruct.mnt_point: %s", dataOptionsStruct.mnt_point);
+    snprintf(msg, sizeof(msg), "mnt_point: %s", dataOptionsStruct.mnt_point);
     log_info(msg);
-    snprintf(msg, sizeof(msg), "parsed_options: %s", parsed_options);
+    snprintf(msg, sizeof(msg), "options: %s", parsed_options);
     log_info(msg);
 
     fuse_opt_add_arg(&fargs, "-s");
